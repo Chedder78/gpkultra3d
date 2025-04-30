@@ -1,0 +1,656 @@
+<!-- Add to your existing WebGL container -->
+<div id="vr-button">ENTER VR</div>
+
+<script>
+// Add to your Three.js init
+const vrButton = document.getElementById('vr-button');
+if (navigator.xr) {
+  vrButton.style.display = 'block';
+  vrButton.addEventListener('click', () => {
+    renderer.xr.enabled = true;
+    renderer.setAnimationLoop(() => {
+      renderer.render(scene, camera);
+    });
+  });
+}
+</script>// Replace your card grid with interactive 360° cases
+function create3DDisplayCase(card) {
+  return `
+    <a-scene embedded style="height: 400px; width: 100%">
+      <a-assets>
+        <img id="card-${card.id}" src="${card.imageUrl}">
+      </a-assets>
+      <a-entity position="0 0 -3" rotation="0 180 0">
+        <a-image src="#card-${card.id}" width="3" height="4" 
+                 animation="property: rotation; to: 0 360 0; loop: true; dur: 20000">
+        </a-image>
+      </a-entity>
+      <a-camera></a-camera>
+    </a-scene>
+  `;
+}// Add AR button to card info
+cardElement.innerHTML += `
+  <button class="ar-button" onclick="viewInAR('${card.imageUrl}')">
+    VIEW IN AR
+  </button>
+`;
+
+// AR implementation
+function viewInAR(imageUrl) {
+  if (navigator.xr && navigator.xr.isSessionSupported('immersive-ar')) {
+    // Launch AR session
+  } else {
+    alert("AR not supported on this device");
+  }
+}<!-- Add to your main page -->
+<a-scene id="collection-room" embedded style="display: none;">
+  <a-assets>
+    ${gpkCards.map(card => `<img id="card3d-${card.id}" src="${card.imageUrl}">`).join('')}
+  </a-assets>
+  
+  <!-- Floating cards in 3D space -->
+  ${gpkCards.map((card, i) => `
+    <a-entity position="${(i%5)*2 - 4} ${Math.floor(i/5)*2 - 2} -5">
+      <a-image src="#card3d-${card.id}" width="1.5" height="2"></a-image>
+    </a-entity>
+  `).join('')}
+  
+  <a-camera></a-camera>
+</a-scene>/* Add to your existing styles */
+.ar-button, .vr-button {
+  background: var(--gpk-red);
+  color: white;
+  border: 2px solid var(--gpk-black);
+  padding: 0.5rem;
+  margin-top: 0.5rem;
+  font-family: 'Bangers', cursive;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.ar-button:hover, .vr-button:hover {
+  background: var(--gpk-yellow);
+  color: var(--gpk-black);
+}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPK ULTRA | Collector's Hub</title>
+    <style>
+        :root {
+            --gpk-red: #ff3e41;
+            --gpk-yellow: #ffde37;
+            --gpk-blue: #2e86ab;
+            --gpk-black: #1a1a1a;
+            --gpk-paper: #f5f5f0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Bangers', cursive, sans-serif;
+        }
+        
+        body {
+            background-color: var(--gpk-paper);
+            color: var(--gpk-black);
+            overflow-x: hidden;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Retro GPK Header */
+        header {
+            background: linear-gradient(135deg, var(--gpk-red), var(--gpk-yellow));
+            padding: 1rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border-bottom: 4px solid var(--gpk-black);
+        }
+        
+        .logo {
+            font-size: 3rem;
+            text-align: center;
+            text-shadow: 3px 3px 0 var(--gpk-blue),
+                         -1px -1px 0 #fff,
+                         1px -1px 0 #fff,
+                         -1px 1px 0 #fff;
+            letter-spacing: 2px;
+        }
+        
+        /* 3D Card Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+            padding: 2rem;
+            perspective: 1000px;
+            flex: 1;
+        }
+        
+        .card-container {
+            position: relative;
+            height: 380px;
+            transform-style: preserve-3d;
+            transition: transform 0.8s;
+            cursor: pointer;
+        }
+        
+        .card-container.flipped {
+            transform: rotateY(180deg);
+        }
+        
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            border: 4px solid var(--gpk-black);
+        }
+        
+        .card-front {
+            background: white;
+            display: flex;
+            flex-direction: column;
+            transform: rotateY(0deg);
+        }
+        
+        .card-back {
+            background: repeating-linear-gradient(
+                45deg,
+                var(--gpk-red),
+                var(--gpk-red) 10px,
+                var(--gpk-yellow) 10px,
+                var(--gpk-yellow) 20px
+            );
+            transform: rotateY(180deg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .card-image {
+            flex: 1;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+        
+        .card-info {
+            padding: 1rem;
+            background: white;
+            border-top: 3px solid var(--gpk-black);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--gpk-red);
+        }
+        
+        /* WebGL Card Viewer Container */
+        #webgl-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #webgl-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: var(--gpk-red);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        
+        /* Sticky Cart Button */
+        .cart-button {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--gpk-blue);
+            color: white;
+            border: none;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            z-index: 50;
+        }
+        
+        .cart-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--gpk-red);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+        
+        /* Footer Styles */
+        footer {
+            background: var(--gpk-black);
+            color: white;
+            padding: 2rem;
+            margin-top: auto;
+        }
+        
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .footer-section h3 {
+            color: var(--gpk-yellow);
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+        
+        .footer-section ul {
+            list-style: none;
+        }
+        
+        .footer-section li {
+            margin-bottom: 0.5rem;
+        }
+        
+        .footer-section a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .footer-section a:hover {
+            color: var(--gpk-red);
+        }
+        
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .social-links a {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background: var(--gpk-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+        }
+        
+        .copyright {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">GPK ULTRA</div>
+    </header>
+    
+    <div class="card-grid" id="cardGrid">
+        <!-- Cards will be injected here by JavaScript -->
+    </div>
+    
+    <button class="cart-button">
+        🛒
+        <span class="cart-count">0</span>
+    </button>
+    
+    <div id="webgl-container">
+        <button id="webgl-close">X CLOSE</button>
+        <canvas id="webgl-canvas"></canvas>
+    </div>
+    
+    <footer>
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>About GPK ULTRA</h3>
+                <p>The ultimate destination for Garbage Pail Kids collectors. Buy, sell, trade, and showcase your collection with fellow enthusiasts.</p>
+                <div class="social-links">
+                    <a href="#" aria-label="Instagram">📸</a>
+                    <a href="#" aria-label="Facebook">👍</a>
+                    <a href="#" aria-label="Twitter">🐦</a>
+                    <a href="#" aria-label="YouTube">▶️</a>
+                </div>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Quick Links</h3>
+                <ul>
+                    <li><a href="#">Browse Cards</a></li>
+                    <li><a href="#">New Releases</a></li>
+                    <li><a href="#">Rare Finds</a></li>
+                    <li><a href="#">Collection Tracker</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Legal</h3>
+                <ul>
+                    <li><a href="#">Terms of Service</a></li>
+                    <li><a href="#">Privacy Policy</a></li>
+                    <li><a href="#">Shipping Policy</a></li>
+                    <li><a href="#">Returns</a></li>
+                </ul>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <ul>
+                    <li>Email: collect@gpkultra.com</li>
+                    <li>Phone: (555) GPK-ULTRA</li>
+                    <li>PO Box 1234</li>
+                    <li>Topps Town, NY 10001</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="copyright">
+            <p>&copy; 2023 GPK ULTRA Collector's Hub. All rights reserved. Garbage Pail Kids is a trademark of The Topps Company.</p>
+        </div>
+    </footer>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+    <script>
+        // Extended GPK Card Data (10 classic cards)
+        const gpkCards = [
+            {
+                id: 1,
+                title: "OS1 Custom Pack",
+                series: 1,
+                number: "",
+                year: 1985,
+                imageUrl: "PompaPaulie.png", // Changed to full URL
+                value: 125.00, // Added value
+                backImage: "20250428204923.png"
+            },
+            {
+                id: 2,
+                title: "OS2 Custom Wrapper",
+                series: 2,
+                number: "",
+                year: 1985,
+                imageUrl: "os2_custom_wrapper.jpg", // Changed to full URL
+                value: 85.50, // Added value
+                backImage: "https://i.imgur.com/5X5w0Wq.png"
+            },
+            {
+                id: 3,
+                title: "OS3 Apple Head",
+                series: 3,
+                number: "",
+                year: 1986,
+                imageUrl: "20241224131854.png", // Changed to full URL
+                value: 65.00, // Added value
+                backImage: "https://i.imgur.com/5X5w0Wq.png"
+            },
+            {
+                id: 4,
+                title: "OS4 Mike Toothy Hertz",
+                series: 4,
+                number: "",
+                year: 1986,
+                imageUrl: "20241224185615.png", // Changed to full URL
+                value: 150.00, // Added value
+                backImage: "https://i.imgur.com/5X5w0Wq.png"
+            },
+            {
+                id: 5,
+                title: "OS5 Custom Wrapper",
+                series: 5,
+                number: "",
+                year: 1986,
+                imageUrl: "os5_custom_wrapper.jpg", // Changed to full URL
+                value: 75.00, // Added value
+                backImage: "https://i.imgur.com/5X5w0Wq.png"
+            },
+            {
+                id: 6,
+                title: "OS6 Custom Wrapper",
+                series: 6,
+                number: "",
+                year: 1986,
+                imageUrl: "Os6_custom_wrapper.png", // Changed to full URL
+                value: 95.00, // Added value
+                backImage: "https://i.imgur.com/5X5w0Wq.png"
+            },
+            {
+                id: 7,
+                title: "OS7 Crash Landen",
+                series: 7,
+                number: "",
+                year: 1986,
+                imageUrl: "20241224190129.png", // Changed to full URL
+                value: 110.00, // Added value
+                backImage: "https://i.imgur.com/5X5w0Wq.png"
+            },
+            
+                
+            {
+                id: 9,
+                title: "OS9 Fish Bowl Joel",
+                series: 9,
+                number: "",
+                year: 1987,
+                imageUrl: "20241224185758.png", // Changed to full URL
+                value: 70.00, // Added value
+                backImage: "https://i.imgur.com/5X5w0Wq.png"
+            },
+            {
+                id: 10,
+                title: "OS10 Custom Wrapper",
+                series: 10,
+                number: "",
+                year: 1987,
+                imageUrl: "Os10_custom_wrapper.png", // Changed to full URL
+                value: 90.00, // Added value
+                backImage: "https://i.imgur.com/5X5w0Wq.png"
+            }
+        ];
+        
+        // DOM Elements
+        const cardGrid = document.getElementById('cardGrid');
+        const webglContainer = document.getElementById('webgl-container');
+        const webglClose = document.getElementById('webgl-close');
+        const cartCount = document.querySelector('.cart-count');
+        
+        // Three.js Variables
+        let scene, camera, renderer, cardMesh;
+        
+        // Initialize the card grid
+        function initCardGrid() {
+            cardGrid.innerHTML = '';
+            
+            gpkCards.forEach(card => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card-container';
+                cardElement.innerHTML = `
+                    <div class="card-face card-front">
+                        <div class="card-image" style="background-image: url('${card.imageUrl}')"></div>
+                        <div class="card-info">
+                            <h3 class="card-title">${card.title}</h3>
+                            <p>Series ${card.series} • ${card.number} • $${card.value.toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <div class="card-face card-back">
+                        <div class="card-image" style="background-image: url('${card.backImage}')"></div>
+                    </div>
+                `;
+                
+                cardElement.addEventListener('click', () => {
+                    cardElement.classList.toggle('flipped');
+                    // Open WebGL viewer on double click
+                    setTimeout(() => {
+                        if(cardElement.classList.contains('flipped')) {
+                            initWebGLViewer(card);
+                        }
+                    }, 400);
+                });
+                
+                cardGrid.appendChild(cardElement);
+            });
+        }
+        
+        // Initialize WebGL Viewer
+        function initWebGLViewer(card) {
+            webglContainer.style.display = 'flex';
+            
+            // Set up Three.js scene
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ 
+                canvas: document.getElementById('webgl-canvas'), 
+                antialias: true,
+                preserveDrawingBuffer: true // Helps with texture loading
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            // Create card geometry
+            const geometry = new THREE.PlaneGeometry(3, 4);
+            
+            // Load texture with error handling
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load(
+                card.imageUrl,
+                (texture) => {
+                    const material = new THREE.MeshStandardMaterial({
+                        map: texture,
+                        roughness: 0.3,
+                        metalness: 0.1
+                    });
+                    
+                    if (cardMesh) {
+                        scene.remove(cardMesh);
+                    }
+                    
+                    cardMesh = new THREE.Mesh(geometry, material);
+                    scene.add(cardMesh);
+                },
+                undefined, // Progress callback (optional)
+                (error) => {
+                    console.error('Error loading texture:', error);
+                    // Fallback to a default material if texture fails to load
+                    const material = new THREE.MeshStandardMaterial({
+                        color: 0xffffff,
+                        roughness: 0.3,
+                        metalness: 0.1
+                    });
+                    
+                    if (cardMesh) {
+                        scene.remove(cardMesh);
+                    }
+                    
+                    cardMesh = new THREE.Mesh(geometry, material);
+                    scene.add(cardMesh);
+                }
+            );
+            
+            camera.position.z = 5;
+            
+            // Add controls
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableZoom = true;
+            controls.enablePan = false;
+            
+            // Animation loop
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            
+            animate();
+            
+            // Handle window resize
+            function handleResize() {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+            
+            window.addEventListener('resize', handleResize);
+            
+            // Clean up event listener when viewer is closed
+            webglClose.addEventListener('click', () => {
+                window.removeEventListener('resize', handleResize);
+                webglContainer.style.display = 'none';
+                if(renderer) {
+                    renderer.dispose();
+                }
+            }, { once: true });
+        }
+        
+        // Close WebGL Viewer
+        webglClose.addEventListener('click', () => {
+            webglContainer.style.display = 'none';
+            // Clean up Three.js
+            if(renderer) {
+                renderer.dispose();
+            }
+        });
+        
+        // Initialize cart counter
+        let cartItems = 0;
+        
+        // Sample add to cart functionality
+        function addToCart(cardId) {
+            cartItems++;
+            cartCount.textContent = cartItems;
+            // Add actual cart logic here
+        }
+        
+        // Initialize the app
+        initCardGrid();
+    </script>
+</body>
+</html>
