@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPK ULTRA 3D | Interactive Hub</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
+    <style>
+        :root {
+            --gpk-red: #ff3e41;
+            --gpk-yellow: #ffde37;
+            --gpk-blue: #2e86ab;
+            --gpk-black: #1a1a1a;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Bangers', cursive, sans-serif;
+        }
+        
+        body {
+            background-color: var(--gpk-black);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gpk-black);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 1s;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--gpk-red);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .screen-info {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 26, 0.9);
+            padding: 15px 30px;
+            border-radius: 30px;
+            border: 3px solid var(--gpk-yellow);
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-spinner"></div>
+        <h2>ENTERING GPK 3D HUB...</h2>
+    </div>
+
+    <!-- Screen Info Panel -->
+    <div id="screen-info" class="screen-info">
+        <h3 id="screen-title">SCREEN TITLE</h3>
+        <p id="screen-description">Select to enter this experience</p>
+    </div>
+
+    <!-- A-Frame Scene -->
+    <a-scene loading-screen="enabled: false" renderer="colorManagement: true">
+        <!-- Room Environment -->
+        <a-entity id="room" geometry="primitive: box; width: 10; height: 5; depth: 10"
+                material="color: #333333; side: back; shader: flat"
+                position="0 2.5 0">
+                
+            <!-- Floor -->
+            <a-entity geometry="primitive: plane; width: 10; height: 10" 
+                    rotation="-90 0 0" 
+                    material="src: #floor-texture; repeat: 5 5"></a-entity>
+            
+            <!-- Ceiling -->
+            <a-entity geometry="primitive: plane; width: 10; height: 10" 
+                    rotation="90 0 0" 
+                    position="0 5 0"
+                    material="color: #222222"></a-entity>
+            
+            <!-- Back Wall -->
+            <a-entity geometry="primitive: plane; width: 10; height: 5" 
+                    position="0 2.5 -5"
+                    material="src: #wall-texture"></a-entity>
+            
+            <!-- Left Wall -->
+            <a-entity geometry="primitive: plane; width: 10; height: 5" 
+                    position="-5 2.5 0"
+                    rotation="0 90 0"
+                    material="color: #252525"></a-entity>
+            
+            <!-- Right Wall -->
+            <a-entity geometry="primitive: plane; width: 10; height: 5" 
+                    position="5 2.5 0"
+                    rotation="0 -90 0"
+                    material="color: #252525"></a-entity>
+        </a-entity>
+        
+        <!-- Lighting -->
+        <a-entity light="type: ambient; color: #444; intensity: 0.3"></a-entity>
+        <a-entity light="type: directional; color: #FFDE37; intensity: 0.5" position="-1 3 1"></a-entity>
+        <a-entity light="type: point; color: #FF3E41; intensity: 0.8; distance: 5" position="0 3 0"></a-entity>
+        
+        <!-- Camera -->
+        <a-entity id="camera-rig" position="0 1.6 0">
+            <a-entity camera="active: true" look-controls="pointerLockEnabled: true" position="0 1.6 0" wasd-controls="acceleration: 50">
+                <a-entity cursor="fuse: true; fuseTimeout: 500" position="0 0 -1" geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03" material="color: #FFDE37; shader: flat"></a-entity>
+            </a-entity>
+        </a-entity>
+        
+        <!-- Interactive Screens -->
+        <a-entity id="screens">
+            <!-- Vintage Collection Screen -->
+            <a-entity class="screen" screen-type="vintage" position="-3 1.5 -4.9" rotation="0 0 0" width="2.5" height="1.5">
+                <a-plane material="src: #vintage-screen; shader: flat" width="2.5" height="1.5"></a-plane>
+                <a-text value="VINTAGE COLLECTION" position="0 1.1 0.01" color="#FFDE37" align="center" width="3"></a-text>
+                <a-text value="1985 Original Series" position="0 -1.1 0.01" color="#FFFFFF" align="center" width="3"></a-text>
+            </a-entity>
+            
+            <!-- Modern Series Screen -->
+            <a-entity class="screen" screen-type="modern" position="0 1.5 -4.9" rotation="0 0 0" width="2.5" height="1.5">
+                <a-plane material="src: #modern-screen; shader: flat" width="2.5" height="1.5"></a-plane>
+                <a-text value="MODERN SERIES" position="0 1.1 0.01" color="#FFDE37" align="center" width="3"></a-text>
+                <a-text value="2020-Present" position="0 -1.1 0.01" color="#FFFFFF" align="center" width="3"></a-text>
+            </a-entity>
+            
+            <!-- Wacky Packages Screen -->
+            <a-entity class="screen" screen-type="wacky" position="3 1.5 -4.9" rotation="0 0 0" width="2.5" height="1.5">
+                <a-plane material="src: #wacky-screen; shader: flat" width="2.5" height="1.5"></a-plane>
+                <a-text value="WACKY PACKAGES" position="0 1.1 0.01" color="#FFDE37" align="center" width="3"></a-text>
+                <a-text value="Parody Stickers" position="0 -1.1 0.01" color="#FFFFFF" align="center" width="3"></a-text>
+            </a-entity>
+            
+            <!-- Custom Cards Screen -->
+            <a-entity class="screen" screen-type="custom" position="-3 3.5 -4.9" rotation="0 0 0" width="2.5" height="1.5">
+                <a-plane material="src: #custom-screen; shader: flat" width="2.5" height="1.5"></a-plane>
+                <a-text value="CUSTOM CARDS" position="0 1.1 0.01" color="#FFDE37" align="center" width="3"></a-text>
+                <a-text value="Fan Creations" position="0 -1.1 0.01" color="#FFFFFF" align="center" width="3"></a-text>
+            </a-entity>
+            
+            <!-- Trading Hub Screen -->
+            <a-entity class="screen" screen-type="trading" position="0 3.5 -4.9" rotation="0 0 0" width="2.5" height="1.5">
+                <a-plane material="src: #trading-screen; shader: flat" width="2.5" height="1.5"></a-plane>
+                <a-text value="TRADING HUB" position="0 1.1 0.01" color="#FFDE37" align="center" width="3"></a-text>
+                <a-text value="Swap With Collectors" position="0 -1.1 0.01" color="#FFFFFF" align="center" width="3"></a-text>
+            </a-entity>
+            
+            <!-- Virtual Pack Opening Screen -->
+            <a-entity class="screen" screen-type="pack-opening" position="3 3.5 -4.9" rotation="0 0 0" width="2.5" height="1.5">
+                <a-plane material="src: #pack-screen; shader: flat" width="2.5" height="1.5"></a-plane>
+                <a-text value="PACK OPENING" position="0 1.1 0.01" color="#FFDE37" align="center" width="3"></a-text>
+                <a-text value="Virtual Experience" position="0 -1.1 0.01" color="#FFFFFF" align="center" width="3"></a-text>
+            </a-entity>
+        </a-entity>
+        
+        <!-- Room Decorations -->
+        <a-entity id="decorations">
+            <!-- GPK Logo on Wall -->
+            <a-image src="#gpk-logo" position="0 3.5 -4.9" width="2" height="1" rotation="0 0 0"></a-image>
+            
+            <!-- Display Cases -->
+            <a-entity position="-3 0.5 0" rotation="0 30 0">
+                <a-box position="0 0.5 0" width="1.5" height="1" depth="1" material="color: #222222; metalness: 0.5"></a-box>
+                <a-box position="0 1.5 0" width="1.5" height="2" depth="1" material="color: #AAAAAA; opacity: 0.3; transparent: true"></a-box>
+                <a-image src="#sample-card" position="0 1.5 0.1" width="0.8" height="1.1" rotation="0 30 0"></a-image>
+            </a-entity>
+            
+            <a-entity position="3 0.5 0" rotation="0 -30 0">
+                <a-box position="0 0.5 0" width="1.5" height="1" depth="1" material="color: #222222; metalness: 0.5"></a-box>
+                <a-box position="0 1.5 0" width="1.5" height="2" depth="1" material="color: #AAAAAA; opacity: 0.3; transparent: true"></a-box>
+                <a-image src="#sample-card" position="0 1.5 0.1" width="0.8" height="1.1" rotation="0 -30 0"></a-image>
+            </a-entity>
+        </a-entity>
+        
+        <!-- Assets -->
+        <a-assets>
+            <!-- Textures -->
+            <img id="floor-texture" src="https://cdn.aframe.io/a-painter/images/floor.jpg">
+            <img id="wall-texture" src="https://cdn.aframe.io/a-painter/images/wall.jpg">
+            
+            <!-- Screen Content Images -->
+            <img id="vintage-screen" src="https://m.media-amazon.com/images/I/71y-U5WxWEL._AC_UF1000,1000_QL80_.jpg">
+            <img id="modern-screen" src="https://assets.fathead.com/2023/products/GPK23S2_hero.jpg">
+            <img id="wacky-screen" src="https://assets.fathead.com/2023/products/WP23S1_hero.jpg">
+            <img id="custom-screen" src="https://i.etsystatic.com/12367418/r/il/1c5c2e/5168888605/il_1140xN.5168888605_9v3x.jpg">
+            <img id="trading-screen" src="https://www.cardboardconnection.com/wp-content/uploads/2023/03/garbage-pail-kids-trading-cards.jpg">
+            <img id="pack-screen" src="https://www.cardboardconnection.com/wp-content/uploads/2023/03/garbage-pail-kids-2023-series-2-cards.jpg">
+            
+            <!-- Decoration Images -->
+            <img id="gpk-logo" src="https://upload.wikimedia.org/wikipedia/en/thumb/4/4f/Garbage_Pail_Kids_Logo.svg/1200px-Garbage_Pail_Kids_Logo.svg.png">
+            <img id="sample-card" src="https://www.cardboardconnection.com/wp-content/uploads/2023/03/garbage-pail-kids-2023-series-2-cards.jpg">
+        </a-assets>
+    </a-scene>
+
+    <script>
+        // Hide loading screen when scene is ready
+        document.querySelector('a-scene').addEventListener('loaded', function() {
+            document.getElementById('loading-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+            }, 1000);
+            
+            // Set up screen interactions
+            setupScreenInteractions();
+        });
+
+        function setupScreenInteractions() {
+            const screens = document.querySelectorAll('.screen');
+            const screenInfo = document.getElementById('screen-info');
+            const screenTitle = document.getElementById('screen-title');
+            const screenDescription = document.getElementById('screen-description');
+            
+            // Screen data for each type
+            const screenData = {
+                vintage: {
+                    title: "VINTAGE COLLECTION",
+                    description: "Explore original 1985 GPK cards in 3D",
+                    link: "#vintage-mode"
+                },
+                modern: {
+                    title: "MODERN SERIES",
+                    description: "View the latest GPK card releases",
+                    link: "#modern-mode"
+                },
+                wacky: {
+                    title: "WACKY PACKAGES",
+                    description: "Interactive parody sticker collection",
+                    link: "#wacky-mode"
+                },
+                custom: {
+                    title: "CUSTOM CARDS",
+                    description: "Browse fan-created GPK artwork",
+                    link: "#custom-mode"
+                },
+                trading: {
+                    title: "TRADING HUB",
+                    description: "Connect with other collectors",
+                    link: "#trading-mode"
+                },
+                "pack-opening": {
+                    title: "VIRTUAL PACKS",
+                    description: "Open digital GPK packs",
+                    link: "#pack-mode"
+                }
+            };
+            
+            // Add event listeners to each screen
+            screens.forEach(screen => {
+                const screenType = screen.getAttribute('screen-type');
+                
+                // Mouse enter - show info
+                screen.addEventListener('mouseenter', () => {
+                    const data = screenData[screenType];
+                    screenTitle.textContent = data.title;
+                    screenDescription.textContent = data.description;
+                    screenInfo.style.display = 'block';
+                    
+                    // Add pulse animation
+                    screen.setAttribute('animation', {
+                        property: 'scale',
+                        to: '1.1 1.1 1',
+                        dur: 300,
+                        easing: 'easeInOutQuad'
+                    });
+                });
+                
+                // Mouse leave - hide info
+                screen.addEventListener('mouseleave', () => {
+                    screenInfo.style.display = 'none';
+                    
+                    // Remove animation
+                    screen.setAttribute('animation', {
+                        property: 'scale',
+                        to: '1 1 1',
+                        dur: 300,
+                        easing: 'easeInOutQuad'
+                    });
+                });
+                
+                // Click - navigate to experience
+                screen.addEventListener('click', () => {
+                    const data = screenData[screenType];
+                    
+                    // Visual feedback
+                    screen.setAttribute('animation', {
+                        property: 'material.color',
+                        to: '#FFDE37',
+                        dur: 200,
+                        easing: 'easeInOutQuad'
+                    });
+                    
+                    setTimeout(() => {
+                        screen.setAttribute('animation', {
+                            property: 'material.color',
+                            to: '#FFFFFF',
+                            dur: 200,
+                            easing: 'easeInOutQuad'
+                        });
+                        
+                        // In a real app, this would load a new scene
+                        alert(`Loading ${data.title} experience...\n(Would navigate to: ${data.link})`);
+                        
+                        // For demo purposes, we'll just log it
+                        console.log(`Navigating to: ${data.link}`);
+                        
+                    }, 200);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
