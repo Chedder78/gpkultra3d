@@ -390,3 +390,115 @@
         document.getElementById('social-btn').addEventListener('click', () => {
             switchView('social');
         });
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPK ULTRA 3D | Collector's Hub</title>
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <style>
+        :root {
+            --gpk-red: #ff3e41;
+            --gpk-yellow: #ffde37;
+            --gpk-blue: #2e86ab;
+            --gpk-black: #1a1a1a;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Bangers', cursive, sans-serif;
+        }
+        
+        body {
+            background-color: var(--gpk-black);
+            color: white;
+            overflow-x: hidden;
+        }
+
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gpk-black);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 1s;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--gpk-red);
+            animation: spin 1s ease-in-out infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        a-scene {
+            position: fixed !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-spinner"></div>
+        <h2>LOADING GPK ULTRA 3D UNIVERSE...</h2>
+    </div>
+
+    <!-- A-Frame Scene -->
+    <a-scene loading-screen="enabled: false" renderer="colorManagement: true">
+        <!-- Basic Environment -->
+        <a-entity environment="preset: default; groundColor: #222222; grid: none"></a-entity>
+        
+        <!-- Lighting -->
+        <a-entity light="type: ambient; color: #444; intensity: 0.5"></a-entity>
+        <a-entity light="type: directional; color: #FFDE37; intensity: 0.8" position="-1 2 1"></a-entity>
+        
+        <!-- Camera -->
+        <a-entity id="camera-rig" position="0 1.6 0">
+            <a-entity camera="active: true" look-controls="pointerLockEnabled: true" position="0 1.6 0" wasd-controls="acceleration: 100">
+                <a-entity cursor="fuse: true; fuseTimeout: 500" position="0 0 -1" geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03" material="color: #FFDE37; shader: flat"></a-entity>
+            </a-entity>
+        </a-entity>
+        
+        <!-- Simple Card Display -->
+        <a-entity id="card-display" position="0 1.5 -3">
+            <a-image src="#card-front" width="1" height="1.4" position="0 0 0" rotation="0 0 0"></a-image>
+            <a-text value="GPK ULTRA" position="0 1.8 0" color="#FFDE37" align="center" width="3"></a-text>
+        </a-entity>
+        
+        <!-- Assets -->
+        <a-assets>
+            <!-- Use placeholder images that will actually load -->
+            <img id="card-front" src="https://upload.wikimedia.org/wikipedia/en/thumb/4/4f/Garbage_Pail_Kids_Logo.svg/1200px-Garbage_Pail_Kids_Logo.svg.png">
+        </a-assets>
+    </a-scene>
+
+    <script>
+        // Hide loading screen when scene is ready
+        document.querySelector('a-scene').addEventListener('loaded', function() {
+            document.getElementById('loading-screen').style.opacity = '0';
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
