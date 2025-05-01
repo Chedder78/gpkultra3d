@@ -788,28 +788,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
      
-        // Star Navigation System
-document.addEventListener('DOMContentLoaded', function() {
-    // Create elements dynamically
-    const portalBtn = document.createElement('div');
-    portalBtn.className = 'star-portal';
-    portalBtn.id = 'portal-btn';
-    portalBtn.innerHTML = '<span>ENTER 3D GALLERY</span>';
-    document.body.appendChild(portalBtn);
-    
-    const modal = document.createElement('div');
-    modal.className = 'gpk-modal';
-    modal.id = 'gpk-modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <h2>GPK ULTRA 3D GALLERY</h2>
-            <p>Ready to enter the immersive 3D card gallery?</p>
-            <button class="modal-btn" id="confirm-btn">LET'S GO!</button>
-            <button class="modal-btn cancel" id="cancel-btn">NOT NOW</button>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    
     // Event handlers
     portalBtn.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -854,13 +832,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialize the app
         initCardGrid();
     </script>
-    <!-- Star Portal Button -->
-<div class="star-portal" id="portal-btn">
-    <span>ENTER 3D GALLERY</span>
-</div>
-
-<!-- Confirmation Modal -->
-<div class="gpk-modal" id="gpk-modal">
+  
     <div class="modal-content">
         <h2>GPK ULTRA 3D GALLERY</h2>
         <p>Ready to enter the immersive 3D card gallery?</p>
