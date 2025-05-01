@@ -248,6 +248,145 @@
             padding-top: 1rem;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
+        /* STAR NAVIGATION SYSTEM */
+.star-portal {
+    position: fixed;
+    width: 70px;
+    height: 70px;
+    bottom: 30px;
+    right: 30px;
+    background: #ffde37;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    border: 3px solid #ff3e41;
+    box-shadow: 0 0 15px #ffde37;
+    cursor: pointer;
+    z-index: 1000;
+    animation: pulse 2s infinite, float 3s ease-in-out infinite;
+    transition: all 0.3s ease;
+}
+
+.star-portal:hover {
+    animation: pulse-fast 0.5s infinite, float 3s ease-in-out infinite;
+}
+
+.star-portal::before {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: #ff3e41;
+    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+    z-index: -1;
+    transform: scale(1.1);
+    opacity: 0.7;
+}
+
+.star-portal span {
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    color: #ffde37;
+    font-size: 0.9rem;
+    text-shadow: 2px 2px 0 #ff3e41;
+    white-space: nowrap;
+    font-family: 'Bangers', cursive;
+}
+
+/* Return star variant */
+.return-portal {
+    left: 30px;
+    right: auto;
+    background: #ff3e41;
+    border-color: #ffde37;
+}
+.return-portal::before {
+    background: #ffde37;
+}
+.return-portal span {
+    color: #ff3e41;
+    text-shadow: 2px 2px 0 #ffde37;
+}
+
+/* Modal styles */
+.gpk-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.5s ease;
+}
+.gpk-modal.active {
+    opacity: 1;
+    pointer-events: all;
+}
+.modal-content {
+    background: #1a1a1a;
+    border: 5px solid #ffde37;
+    border-radius: 15px;
+    padding: 30px;
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+    transform: scale(0.5);
+    transition: transform 0.5s ease;
+    box-shadow: 0 0 15px #ffde37;
+}
+.gpk-modal.active .modal-content {
+    transform: scale(1);
+}
+.modal-content h2 {
+    color: #ffde37;
+    font-size: 2rem;
+    margin-bottom: 15px;
+    text-shadow: 3px 3px 0 #ff3e41;
+    font-family: 'Bangers', cursive;
+}
+.modal-btn {
+    background: #ffde37;
+    color: #1a1a1a;
+    border: 3px solid #ff3e41;
+    padding: 10px 25px;
+    border-radius: 30px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    margin: 0 10px;
+    transition: all 0.3s ease;
+    font-family: 'Bangers', cursive;
+}
+.modal-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 15px #ffde37;
+}
+.modal-btn.cancel {
+    background: #ff3e41;
+    color: white;
+    border-color: #ffde37;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); box-shadow: 0 0 15px #ffde37; }
+    50% { transform: scale(1.1); box-shadow: 0 0 25px #ffde37; }
+    100% { transform: scale(1); box-shadow: 0 0 15px #ffde37; }
+}
+@keyframes pulse-fast {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
 </head>
@@ -304,9 +443,7 @@
     font-size: 1rem;
     cursor: pointer;
   "
->
-  GPK Ultra 3D Gallery Open During Construction
-</button>
+>GPK Ultra 3D Gallery Open During Construction</button>
 
             
             <div class="footer-section">
@@ -594,7 +731,63 @@
             // Add actual cart logic here
         }
         
-        // Initialize the app
+        
+    
+    // Star Navigation System
+document.addEventListener('DOMContentLoaded', function() {
+    // Get elements
+    const portalBtn = document.getElementById('portal-btn');
+    const modal = document.getElementById('gpk-modal');
+    const confirmBtn = document.getElementById('confirm-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    
+    // Only add these if on main page (not gallery)
+    if(portalBtn && modal) {
+        // Star button click - show modal
+        portalBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            modal.classList.add('active');
+            
+            // Create ripple effect
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            ripple.style.left = `${e.clientX - portalBtn.getBoundingClientRect().left}px`;
+            ripple.style.top = `${e.clientY - portalBtn.getBoundingClientRect().top}px`;
+            portalBtn.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
+        });
+        
+        // Modal buttons
+        confirmBtn.addEventListener('click', function() {
+            window.location.href = 'gpkUltra3dGallery.html';
+        });
+        
+        cancelBtn.addEventListener('click', function() {
+            modal.classList.remove('active');
+        });
+        
+        // Close modal when clicking outside
+        modal.addEventListener('click', function(e) {
+            if(e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+    }
+    
+    // Add return star to gallery page automatically
+    if(window.location.pathname.includes('gpkUltra3dGallery.html')) {
+        const returnBtn = document.createElement('div');
+        returnBtn.className = 'star-portal return-portal';
+        returnBtn.id = 'return-btn';
+        returnBtn.innerHTML = '<span>RETURN TO HUB</span>';
+        document.body.appendChild(returnBtn);
+        
+        returnBtn.addEventListener('click', function() {
+            window.location.href = 'index.html';
+        });
+    }
+});
+     // Initialize the app
         initCardGrid();
     </script>
 </body>
