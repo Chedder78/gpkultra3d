@@ -789,6 +789,83 @@ document.addEventListener('DOMContentLoaded', function() {
 });
      // Initialize the app
         initCardGrid();
+        // Star Navigation System
+document.addEventListener('DOMContentLoaded', function() {
+    // Create elements dynamically
+    const portalBtn = document.createElement('div');
+    portalBtn.className = 'star-portal';
+    portalBtn.id = 'portal-btn';
+    portalBtn.innerHTML = '<span>ENTER 3D GALLERY</span>';
+    document.body.appendChild(portalBtn);
+    
+    const modal = document.createElement('div');
+    modal.className = 'gpk-modal';
+    modal.id = 'gpk-modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <h2>GPK ULTRA 3D GALLERY</h2>
+            <p>Ready to enter the immersive 3D card gallery?</p>
+            <button class="modal-btn" id="confirm-btn">LET'S GO!</button>
+            <button class="modal-btn cancel" id="cancel-btn">NOT NOW</button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    
+    // Event handlers
+    portalBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        modal.classList.add('active');
+        
+        // Create ripple effect
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple';
+        ripple.style.left = `${e.clientX - portalBtn.getBoundingClientRect().left}px`;
+        ripple.style.top = `${e.clientY - portalBtn.getBoundingClientRect().top}px`;
+        portalBtn.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 600);
+    });
+    
+    document.getElementById('confirm-btn').addEventListener('click', function() {
+        window.location.href = 'gpkUltra3dGallery.html';
+    });
+    
+    document.getElementById('cancel-btn').addEventListener('click', function() {
+        modal.classList.remove('active');
+    });
+    
+    modal.addEventListener('click', function(e) {
+        if(e.target === modal) {
+            modal.classList.remove('active');
+        }
+    });
+    
+    // Add return star to gallery page
+    if(window.location.pathname.includes('gpkUltra3dGallery.html')) {
+        const returnBtn = document.createElement('div');
+        returnBtn.className = 'star-portal return-portal';
+        returnBtn.id = 'return-btn';
+        returnBtn.innerHTML = '<span>RETURN TO HUB</span>';
+        document.body.appendChild(returnBtn);
+        
+        returnBtn.addEventListener('click', function() {
+            window.location.href = 'index.html';
+        });
+    }
+});
     </script>
+    <!-- Star Portal Button -->
+<div class="star-portal" id="portal-btn">
+    <span>ENTER 3D GALLERY</span>
+</div>
+
+<!-- Confirmation Modal -->
+<div class="gpk-modal" id="gpk-modal">
+    <div class="modal-content">
+        <h2>GPK ULTRA 3D GALLERY</h2>
+        <p>Ready to enter the immersive 3D card gallery?</p>
+        <button class="modal-btn" id="confirm-btn">LET'S GO!</button>
+        <button class="modal-btn cancel" id="cancel-btn">NOT NOW</button>
+    </div>
+</div>
 </body>
 </html>
