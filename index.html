@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GPK ULTRA | Collector's Hub</title>
-  <!-- other head tags here… -->
     <style>
         :root {
             --gpk-red: #ff3e41;
@@ -12,6 +11,9 @@
             --gpk-blue: #2e86ab;
             --gpk-black: #1a1a1a;
             --gpk-paper: #f5f5f0;
+            --transition-fast: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --transition-medium: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --transition-slow: 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         
         * {
@@ -28,6 +30,8 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
         
         /* Retro GPK Header */
@@ -39,16 +43,32 @@
             z-index: 100;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
             border-bottom: 4px solid var(--gpk-black);
+            will-change: transform;
         }
         
         .logo {
-            font-size: 3rem;
+            font-size: clamp(2rem, 8vw, 3rem);
             text-align: center;
             text-shadow: 3px 3px 0 var(--gpk-blue),
                          -1px -1px 0 #fff,
                          1px -1px 0 #fff,
                          -1px 1px 0 #fff;
             letter-spacing: 2px;
+            transition: transform var(--transition-fast);
+        }
+        
+        .logo:hover {
+            transform: scale(1.05);
+        }
+        
+        /* Loading State */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+            font-size: 1.5rem;
+            color: var(--gpk-blue);
         }
         
         /* 3D Card Grid */
@@ -65,8 +85,9 @@
             position: relative;
             height: 380px;
             transform-style: preserve-3d;
-            transition: transform 0.8s;
+            transition: transform var(--transition-slow);
             cursor: pointer;
+            will-change: transform;
         }
         
         .card-container.flipped {
@@ -82,6 +103,7 @@
             overflow: hidden;
             box-shadow: 0 10px 25px rgba(0,0,0,0.2);
             border: 4px solid var(--gpk-black);
+            will-change: transform;
         }
         
         .card-front {
@@ -110,6 +132,25 @@
             background-size: contain;
             background-repeat: no-repeat;
             background-position: center;
+            transition: background-image var(--transition-medium);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .card-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255,255,255,0.1);
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+        
+        .card-container:hover .card-image::after {
+            opacity: 1;
         }
         
         .card-info {
@@ -122,6 +163,9 @@
             font-size: 1.5rem;
             margin-bottom: 0.5rem;
             color: var(--gpk-red);
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
         }
         
         /* WebGL Card Viewer Container */
@@ -131,11 +175,18 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.95);
             z-index: 1000;
             display: none;
             justify-content: center;
             align-items: center;
+            opacity: 0;
+            transition: opacity var(--transition-medium);
+        }
+        
+        #webgl-container.visible {
+            display: flex;
+            opacity: 1;
         }
         
         #webgl-close {
@@ -149,39 +200,43 @@
             font-size: 1.2rem;
             cursor: pointer;
             border-radius: 4px;
+            z-index: 1001;
+            transition: all var(--transition-fast);
         }
         
-        /* Sticky Cart Button 
-        .cart-button {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: var(--gpk-blue);
-            color: white;
-            border: none;
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            font-size: 1.5rem;
-            cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 50;
+        #webgl-close:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
         
-        .cart-count {
+        #webgl-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+        
+        /* Loading spinner for WebGL */
+        .webgl-loading {
             position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--gpk-red);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            font-size: 1.5rem;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            font-size: 0.8rem;
-        } */
+            gap: 1rem;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: var(--gpk-yellow);
+            animation: spin 1s ease-in-out infinite;
+        }
         
         /* Footer Styles */
         footer {
@@ -216,7 +271,7 @@
         .footer-section a {
             color: white;
             text-decoration: none;
-            transition: color 0.3s;
+            transition: color var(--transition-fast);
         }
         
         .footer-section a:hover {
@@ -240,6 +295,12 @@
             justify-content: center;
             color: white;
             font-size: 1.2rem;
+            transition: all var(--transition-fast);
+        }
+        
+        .social-links a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
         }
         
         .copyright {
@@ -248,147 +309,254 @@
             padding-top: 1rem;
             border-top: 1px solid rgba(255,255,255,0.1);
         }
+        
+        /* Gallery Button */
+        .gallery-btn {
+            padding: 0.5em 1em;
+            background-color: var(--gpk-blue);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-family: 'Bangers', cursive;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            display: block;
+            margin: 1rem auto;
+            max-width: 300px;
+            text-align: center;
+        }
+        
+        .gallery-btn:hover {
+            background-color: var(--gpk-red);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        
         /* STAR NAVIGATION SYSTEM */
-.star-portal {
-    position: fixed;
-    width: 70px;
-    height: 70px;
-    bottom: 30px;
-    right: 30px;
-    background: #ffde37;
-    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-    border: 3px solid #ff3e41;
-    box-shadow: 0 0 15px #ffde37;
-    cursor: pointer;
-    z-index: 1000;
-    animation: pulse 2s infinite, float 3s ease-in-out infinite;
-    transition: all 0.3s ease;
-}
-
-.star-portal:hover {
-    animation: pulse-fast 0.5s infinite, float 3s ease-in-out infinite;
-}
-
-.star-portal::before {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    background: #ff3e41;
-    clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
-    z-index: -1;
-    transform: scale(1.1);
-    opacity: 0.7;
-}
-
-.star-portal span {
-    position: absolute;
-    bottom: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    color: #ffde37;
-    font-size: 0.9rem;
-    text-shadow: 2px 2px 0 #ff3e41;
-    white-space: nowrap;
-    font-family: 'Bangers', cursive;
-}
-
-/* Return star variant */
-.return-portal {
-    left: 30px;
-    right: auto;
-    background: #ff3e41;
-    border-color: #ffde37;
-}
-.return-portal::before {
-    background: #ffde37;
-}
-.return-portal span {
-    color: #ff3e41;
-    text-shadow: 2px 2px 0 #ffde37;
-}
-
-/* Modal styles */
-.gpk-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.5s ease;
-}
-.gpk-modal.active {
-    opacity: 1;
-    pointer-events: all;
-}
-.modal-content {
-    background: #1a1a1a;
-    border: 5px solid #ffde37;
-    border-radius: 15px;
-    padding: 30px;
-    max-width: 400px;
-    text-align: center;
-    position: relative;
-    transform: scale(0.5);
-    transition: transform 0.5s ease;
-    box-shadow: 0 0 15px #ffde37;
-}
-.gpk-modal.active .modal-content {
-    transform: scale(1);
-}
-.modal-content h2 {
-    color: #ffde37;
-    font-size: 2rem;
-    margin-bottom: 15px;
-    text-shadow: 3px 3px 0 #ff3e41;
-    font-family: 'Bangers', cursive;
-}
-.modal-btn {
-    background: #ffde37;
-    color: #1a1a1a;
-    border: 3px solid #ff3e41;
-    padding: 10px 25px;
-    border-radius: 30px;
-    font-size: 1.2rem;
-    cursor: pointer;
-    margin: 0 10px;
-    transition: all 0.3s ease;
-    font-family: 'Bangers', cursive;
-}
-.modal-btn:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 0 15px #ffde37;
-}
-.modal-btn.cancel {
-    background: #ff3e41;
-    color: white;
-    border-color: #ffde37;
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); box-shadow: 0 0 15px #ffde37; }
-    50% { transform: scale(1.1); box-shadow: 0 0 25px #ffde37; }
-    100% { transform: scale(1); box-shadow: 0 0 15px #ffde37; }
-}
-@keyframes pulse-fast {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-    100% { transform: scale(1); }
-}
-@keyframes float {
-    0% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-    100% { transform: translateY(0px); }
-}
+        .star-portal {
+            position: fixed;
+            width: 70px;
+            height: 70px;
+            bottom: 30px;
+            right: 30px;
+            background: var(--gpk-yellow);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            border: 3px solid var(--gpk-red);
+            box-shadow: 0 0 15px var(--gpk-yellow);
+            cursor: pointer;
+            z-index: 1000;
+            animation: pulse 2s infinite, float 3s ease-in-out infinite;
+            transition: all var(--transition-fast);
+            will-change: transform;
+        }
+        
+        .star-portal:hover {
+            animation: pulse-fast 0.5s infinite, float 3s ease-in-out infinite;
+            transform: scale(1.1);
+        }
+        
+        .star-portal::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: var(--gpk-red);
+            clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+            z-index: -1;
+            transform: scale(1.1);
+            opacity: 0.7;
+        }
+        
+        .star-portal span {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: var(--gpk-yellow);
+            font-size: 0.9rem;
+            text-shadow: 2px 2px 0 var(--gpk-red);
+            white-space: nowrap;
+            font-family: 'Bangers', cursive;
+        }
+        
+        /* Return star variant */
+        .return-portal {
+            left: 30px;
+            right: auto;
+            background: var(--gpk-red);
+            border-color: var(--gpk-yellow);
+        }
+        
+        .return-portal::before {
+            background: var(--gpk-yellow);
+        }
+        
+        .return-portal span {
+            color: var(--gpk-red);
+            text-shadow: 2px 2px 0 var(--gpk-yellow);
+        }
+        
+        /* Modal styles */
+        .gpk-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            pointer-events: none;
+            transition: all var(--transition-medium);
+        }
+        
+        .gpk-modal.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .modal-content {
+            background: var(--gpk-black);
+            border: 5px solid var(--gpk-yellow);
+            border-radius: 15px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            position: relative;
+            transform: scale(0.5);
+            transition: transform var(--transition-medium);
+            box-shadow: 0 0 15px var(--gpk-yellow);
+            will-change: transform;
+        }
+        
+        .gpk-modal.active .modal-content {
+            transform: scale(1);
+        }
+        
+        .modal-content h2 {
+            color: var(--gpk-yellow);
+            font-size: 2rem;
+            margin-bottom: 15px;
+            text-shadow: 3px 3px 0 var(--gpk-red);
+            font-family: 'Bangers', cursive;
+        }
+        
+        .modal-btn {
+            background: var(--gpk-yellow);
+            color: var(--gpk-black);
+            border: 3px solid var(--gpk-red);
+            padding: 10px 25px;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin: 0 10px;
+            transition: all var(--transition-fast);
+            font-family: 'Bangers', cursive;
+            will-change: transform;
+        }
+        
+        .modal-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px var(--gpk-yellow);
+        }
+        
+        .modal-btn.cancel {
+            background: var(--gpk-red);
+            color: white;
+            border-color: var(--gpk-yellow);
+        }
+        
+        /* Ripple effect */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.7);
+            transform: scale(0);
+            animation: ripple var(--transition-medium) linear;
+            pointer-events: none;
+        }
+        
+        /* Keyframes */
+        @keyframes pulse {
+            0% { transform: scale(1); box-shadow: 0 0 15px var(--gpk-yellow); }
+            50% { transform: scale(1.1); box-shadow: 0 0 25px var(--gpk-yellow); }
+            100% { transform: scale(1); box-shadow: 0 0 15px var(--gpk-yellow); }
+        }
+        
+        @keyframes pulse-fast {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .card-grid {
+                grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+                gap: 1.5rem;
+                padding: 1.5rem;
+            }
+            
+            .card-container {
+                height: 340px;
+            }
+            
+            .star-portal {
+                width: 60px;
+                height: 60px;
+                bottom: 20px;
+                right: 20px;
+            }
+            
+            .star-portal span {
+                font-size: 0.8rem;
+                bottom: -20px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .card-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+                padding: 1rem;
+            }
+            
+            .modal-content {
+                padding: 20px;
+            }
+            
+            .modal-btn {
+                margin: 5px;
+                padding: 8px 15px;
+                font-size: 1rem;
+            }
+        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" as="script">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js" as="script">
 </head>
 <body>
     <header>
@@ -396,16 +564,15 @@
     </header>
     
     <div class="card-grid" id="cardGrid">
-        <!-- Cards will be injected here by JavaScript -->
+        <div class="loading">Loading GPK Cards...</div>
     </div>
     
-    <button class="cart-button">
-        🛒
-        <span class="cart-count">0</span>
-    </button>
-    
     <div id="webgl-container">
-        <button id="webgl-close">X CLOSE</button>
+        <button id="webgl-close">✕ CLOSE</button>
+        <div class="webgl-loading">
+            <div class="spinner"></div>
+            <div>Loading 3D Viewer...</div>
+        </div>
         <canvas id="webgl-canvas"></canvas>
     </div>
     
@@ -431,20 +598,6 @@
                     <li><a href="#">Collection Tracker</a></li>
                 </ul>
             </div>
-            <button
-  onclick="window.location.href='gpkUltra3dGallery.html'"
-  style="
-    padding: 0.5em 1em;
-    background-color: #0ff;
-    color: #000;
-    border: none;
-    border-radius: 4px;
-    font-family: sans-serif;
-    font-size: 1rem;
-    cursor: pointer;
-  "
->GPK Ultra 3D Gallery Open During Construction</button>
-
             
             <div class="footer-section">
                 <h3>Legal</h3>
@@ -468,14 +621,33 @@
         </div>
         
         <div class="copyright">
-            <p>&copy; 2023 GPK ULTRA Collector's Hub. All rights reserved. Garbage Pail Kids is a trademark of The Topps Company.</p>
+            <p>&copy; <span id="current-year">2023</span> GPK ULTRA Collector's Hub. All rights reserved. Garbage Pail Kids is a trademark of The Topps Company.</p>
         </div>
+        
+        <button class="gallery-btn" onclick="window.location.href='gpkUltra3dGallery.html'">
+            GPK Ultra 3D Gallery (Open During Construction)
+        </button>
     </footer>
+    
+    <!-- Star Navigation -->
+    <div class="star-portal" id="portal-btn">
+        <span>3D GALLERY</span>
+    </div>
+    
+    <!-- Modal -->
+    <div class="gpk-modal" id="gpk-modal">
+        <div class="modal-content">
+            <h2>GPK ULTRA 3D GALLERY</h2>
+            <p>Ready to enter the immersive 3D card gallery?</p>
+            <button class="modal-btn" id="confirm-btn">LET'S GO!</button>
+            <button class="modal-btn cancel" id="cancel-btn">NOT NOW</button>
+        </div>
+    </div>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
     <script>
-        // Extended GPK Card Data (10 classic cards)
+        // Enhanced GPK Card Data with loading states
         const gpkCards = [
             {
                 id: 1,
@@ -483,8 +655,9 @@
                 series: 1,
                 number: "",
                 year: 1985,
-                imageUrl: "PompaPaulie.png", // Changed to full URL
-                value: 125.00, // Added value
+                imageUrl: "PompaPaulie.png",
+                placeholderUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%231a1a1a' text-anchor='middle'%3ELoading...%3C/text%3E%3C/svg%3E",
+                value: 125.00,
                 backImage: "20250428204923.png"
             },
             {
@@ -493,19 +666,20 @@
                 series: 2,
                 number: "",
                 year: 1985,
-                imageUrl: "os2_custom_wrapper.jpg", // Changed to full URL
-                value: 85.50, // Added value
+                imageUrl: "os2_custom_wrapper.jpg",
+                placeholderUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%231a1a1a' text-anchor='middle'%3ELoading...%3C/text%3E%3C/svg%3E",
+                value: 85.50,
                 backImage: "https://i.imgur.com/5X5w0Wq.png"
             },
-
             {
                 id: 3,
                 title: "OS3 Custom Wrapper",
                 series: 3,
                 number: "",
                 year: 1986,
-                imageUrl: "os3_custom_wrapper.jpg", // Changed to full URL
-                value: 65.00, // Added value
+                imageUrl: "os3_custom_wrapper.jpg",
+                placeholderUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%231a1a1a' text-anchor='middle'%3ELoading...%3C/text%3E%3C/svg%3E",
+                value: 65.00,
                 backImage: "https://i.imgur.com/5X5w0Wq.png"
             },
             {
@@ -514,8 +688,9 @@
                 series: 4,
                 number: "",
                 year: 1986,
-                imageUrl: "os4_custom_wrapper.jpg", // Changed to full URL
-                value: 150.00, // Added value
+                imageUrl: "os4_custom_wrapper.jpg",
+                placeholderUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%231a1a1a' text-anchor='middle'%3ELoading...%3C/text%3E%3C/svg%3E",
+                value: 150.00,
                 backImage: "https://i.imgur.com/5X5w0Wq.png"
             },
             {
@@ -524,8 +699,9 @@
                 series: 5,
                 number: "",
                 year: 1986,
-                imageUrl: "os5_custom_wrapper.jpg", // Changed to full URL
-                value: 75.00, // Added value
+                imageUrl: "os5_custom_wrapper.jpg",
+                placeholderUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%231a1a1a' text-anchor='middle'%3ELoading...%3C/text%3E%3C/svg%3E",
+                value: 75.00,
                 backImage: "https://i.imgur.com/5X5w0Wq.png"
             },
             {
@@ -534,8 +710,9 @@
                 series: 6,
                 number: "",
                 year: 1986,
-                imageUrl: "Os6_custom_wrapper.png", // Changed to full URL
-                value: 95.00, // Added value
+                imageUrl: "Os6_custom_wrapper.png",
+                placeholderUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%231a1a1a' text-anchor='middle'%3ELoading...%3C/text%3E%3C/svg%3E",
+                value: 95.00,
                 backImage: "https://i.imgur.com/5X5w0Wq.png"
             },
             {
@@ -544,20 +721,20 @@
                 series: 7,
                 number: "",
                 year: 1986,
-                imageUrl: "OS7_customWrapper.png", // Changed to full URL
-                value: 110.00, // Added value
+                imageUrl: "OS7_customWrapper.png",
+                placeholderUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%231a1a1a' text-anchor='middle'%3ELoading...%3C/text%3E%3C/svg%3E",
+                value: 110.00,
                 backImage: "https://i.imgur.com/5X5w0Wq.png"
             },
-            
-                
             {
                 id: 9,
                 title: "OS9 Custom Wrapper",
                 series: 9,
                 number: "",
                 year: 1987,
-                imageUrl: "Series9_customWrapper.png", // Changed to full URL
-                value: 70.00, // Added value
+                imageUrl: "Series9_customWrapper.png",
+                placeholderUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%231a1a1a' text-anchor='middle'%3ELoading...%3C/text%3E%3C/svg%3E",
+                value: 70.00,
                 backImage: "https://i.imgur.com/5X5w0Wq.png"
             },
             {
@@ -566,8 +743,9 @@
                 series: 10,
                 number: "",
                 year: 1987,
-                imageUrl: "Os10_custom_wrapper.png", // Changed to full URL
-                value: 90.00, // Added value
+                imageUrl: "Os10_custom_wrapper.png",
+                placeholderUrl: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 400'%3E%3Crect width='100%25' height='100%25' fill='%23f5f5f0'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%231a1a1a' text-anchor='middle'%3ELoading...%3C/text%3E%3C/svg%3E",
+                value: 90.00,
                 backImage: "https://i.imgur.com/5X5w0Wq.png"
             }
         ];
@@ -576,12 +754,16 @@
         const cardGrid = document.getElementById('cardGrid');
         const webglContainer = document.getElementById('webgl-container');
         const webglClose = document.getElementById('webgl-close');
-        const cartCount = document.querySelector('.cart-count');
+        const loadingSpinner = document.querySelector('.webgl-loading');
         
         // Three.js Variables
-        let scene, camera, renderer, cardMesh;
+        let scene, camera, renderer, cardMesh, controls;
+        let isWebGLInitialized = false;
         
-        // Initialize the card grid
+        // Set current year in footer
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        
+        // Initialize the card grid with lazy loading
         function initCardGrid() {
             cardGrid.innerHTML = '';
             
@@ -590,7 +772,7 @@
                 cardElement.className = 'card-container';
                 cardElement.innerHTML = `
                     <div class="card-face card-front">
-                        <div class="card-image" style="background-image: url('${card.imageUrl}')"></div>
+                        <div class="card-image" style="background-image: url('${card.placeholderUrl}')" data-src="${card.imageUrl}"></div>
                         <div class="card-info">
                             <h3 class="card-title">${card.title}</h3>
                             <p>Series ${card.series} • ${card.number} • $${card.value.toFixed(2)}</p>
@@ -601,97 +783,196 @@
                     </div>
                 `;
                 
-                cardElement.addEventListener('click', () => {
+                // Add event listeners with passive option for better scrolling performance
+                const handleClick = () => {
                     cardElement.classList.toggle('flipped');
-                    // Open WebGL viewer on double click
-                    setTimeout(() => {
-                        if(cardElement.classList.contains('flipped')) {
-                            initWebGLViewer(card);
-                        }
-                    }, 400);
+                };
+                
+                cardElement.addEventListener('click', handleClick, { passive: true });
+                cardElement.addEventListener('touchstart', handleClick, { passive: true });
+                
+                // Double click/tap for 3D view
+                let tapCount = 0;
+                const handleDoubleTap = () => {
+                    tapCount++;
+                    if (tapCount === 1) {
+                        setTimeout(() => {
+                            if (tapCount === 2 && cardElement.classList.contains('flipped')) {
+                                initWebGLViewer(card);
+                            }
+                            tapCount = 0;
+                        }, 300);
+                    }
+                };
+                
+                cardElement.addEventListener('dblclick', () => {
+                    if (cardElement.classList.contains('flipped')) {
+                        initWebGLViewer(card);
+                    }
                 });
+                
+                cardElement.addEventListener('touchend', handleDoubleTap, { passive: true });
                 
                 cardGrid.appendChild(cardElement);
             });
+            
+            // Lazy load images
+            lazyLoadImages();
         }
         
-        // Initialize WebGL Viewer
+        // Lazy load images with intersection observer
+        function lazyLoadImages() {
+            const lazyImages = document.querySelectorAll('.card-image[data-src]');
+            
+            if ('IntersectionObserver' in window) {
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const image = entry.target;
+                            const src = image.getAttribute('data-src');
+                            
+                            // Create a new image to load in the background
+                            const img = new Image();
+                            img.src = src;
+                            img.onload = () => {
+                                // Apply the loaded image with a smooth transition
+                                image.style.backgroundImage = `url('${src}')`;
+                                image.removeAttribute('data-src');
+                            };
+                            img.onerror = () => {
+                                console.error('Error loading image:', src);
+                                // You could set a fallback image here if desired
+                            };
+                            
+                            observer.unobserve(image);
+                        }
+                    });
+                }, {
+                    rootMargin: '100px 0px',
+                    threshold: 0.1
+                });
+                
+                lazyImages.forEach(image => {
+                    imageObserver.observe(image);
+                });
+            } else {
+                // Fallback for browsers without IntersectionObserver
+                lazyImages.forEach(image => {
+                    const src = image.getAttribute('data-src');
+                    image.style.backgroundImage = `url('${src}')`;
+                    image.removeAttribute('data-src');
+                });
+            }
+        }
+        
+        // Initialize WebGL Viewer with better loading states
         function initWebGLViewer(card) {
-            webglContainer.style.display = 'flex';
+            if (!isWebGLInitialized) {
+                webglContainer.classList.add('visible');
+                loadingSpinner.style.display = 'flex';
+                
+                // Set up Three.js scene
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x000000);
+                
+                camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                camera.position.z = 5;
+                
+                renderer = new THREE.WebGLRenderer({ 
+                    canvas: document.getElementById('webgl-canvas'), 
+                    antialias: true,
+                    powerPreference: "high-performance"
+                });
+                renderer.setPixelRatio(window.devicePixelRatio);
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                
+                // Add lights with more realistic values
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                scene.add(ambientLight);
+                
+                const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight1.position.set(1, 1, 1);
+                scene.add(directionalLight1);
+                
+                const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+                directionalLight2.position.set(-1, -1, -1);
+                scene.add(directionalLight2);
+                
+                // Add controls with damping for smoother movement
+                controls = new THREE.OrbitControls(camera, renderer.domElement);
+                controls.enableDamping = true;
+                controls.dampingFactor = 0.05;
+                controls.enableZoom = true;
+                controls.enablePan = false;
+                controls.minDistance = 3;
+                controls.maxDistance = 10;
+                
+                isWebGLInitialized = true;
+            }
             
-            // Set up Three.js scene
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ 
-                canvas: document.getElementById('webgl-canvas'), 
-                antialias: true,
-                preserveDrawingBuffer: true // Helps with texture loading
-            });
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            // Create or update card geometry
+            const geometry = new THREE.PlaneGeometry(3, 4, 32, 32);
             
-            // Add lights
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(1, 1, 1);
-            scene.add(directionalLight);
-            
-            // Create card geometry
-            const geometry = new THREE.PlaneGeometry(3, 4);
-            
-            // Load texture with error handling
+            // Load texture with better error handling
             const textureLoader = new THREE.TextureLoader();
             textureLoader.load(
                 card.imageUrl,
                 (texture) => {
+                    texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
+                    
                     const material = new THREE.MeshStandardMaterial({
                         map: texture,
-                        roughness: 0.3,
-                        metalness: 0.1
+                        roughness: 0.2,
+                        metalness: 0.1,
+                        side: THREE.DoubleSide
                     });
                     
+                    // Remove previous card if exists
                     if (cardMesh) {
                         scene.remove(cardMesh);
                     }
                     
+                    // Create new card mesh
                     cardMesh = new THREE.Mesh(geometry, material);
                     scene.add(cardMesh);
+                    
+                    // Hide loading spinner
+                    loadingSpinner.style.display = 'none';
+                    
+                    // Start animation if not already running
+                    if (!animationId) {
+                        animate();
+                    }
                 },
-                undefined, // Progress callback (optional)
+                (xhr) => {
+                    // Progress callback
+                    const percentComplete = (xhr.loaded / xhr.total) * 100;
+                    console.log(`${Math.round(percentComplete)}% loaded`);
+                },
                 (error) => {
                     console.error('Error loading texture:', error);
-                    // Fallback to a default material if texture fails to load
-                    const material = new THREE.MeshStandardMaterial({
+                    loadingSpinner.style.display = 'none';
+                    
+                    // Fallback to a colored material
+                    const fallbackMaterial = new THREE.MeshStandardMaterial({
                         color: 0xffffff,
                         roughness: 0.3,
-                        metalness: 0.1
+                        metalness: 0.1,
+                        side: THREE.DoubleSide
                     });
                     
                     if (cardMesh) {
                         scene.remove(cardMesh);
                     }
                     
-                    cardMesh = new THREE.Mesh(geometry, material);
+                    cardMesh = new THREE.Mesh(geometry, fallbackMaterial);
                     scene.add(cardMesh);
+                    
+                    if (!animationId) {
+                        animate();
+                    }
                 }
             );
-            
-            camera.position.z = 5;
-            
-            // Add controls
-            const controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableZoom = true;
-            controls.enablePan = false;
-            
-            // Animation loop
-            function animate() {
-                requestAnimationFrame(animate);
-                controls.update();
-                renderer.render(scene, camera);
-            }
-            
-            animate();
             
             // Handle window resize
             function handleResize() {
@@ -702,143 +983,121 @@
             
             window.addEventListener('resize', handleResize);
             
-            // Clean up event listener when viewer is closed
-            webglClose.addEventListener('click', () => {
+            // Clean up when closing
+            const closeViewer = () => {
                 window.removeEventListener('resize', handleResize);
-                webglContainer.style.display = 'none';
-                if(renderer) {
-                    renderer.dispose();
-                }
-            }, { once: true });
+                webglContainer.classList.remove('visible');
+                loadingSpinner.style.display = 'none';
+            };
+            
+            webglClose.addEventListener('click', closeViewer);
         }
         
-        // Close WebGL Viewer
-        webglClose.addEventListener('click', () => {
-            webglContainer.style.display = 'none';
-            // Clean up Three.js
-            if(renderer) {
+        // Animation loop
+        let animationId = null;
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            
+            if (controls) {
+                controls.update();
+            }
+            
+            if (renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+        
+        // Clean up Three.js resources
+        function cleanupThreeJS() {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+                animationId = null;
+            }
+            
+            if (renderer) {
                 renderer.dispose();
             }
-        });
-        
-        /* Initialize cart counter
-        let cartItems = 0;
-        
-        // Sample add to cart functionality
-        function addToCart(cardId) {
-            cartItems++;
-            cartCount.textContent = cartItems;
-            // Add actual cart logic here
-        } */
-        
-        
-    
-    // Star Navigation System
-document.addEventListener('DOMContentLoaded', function() {
-    // Get elements
-    const portalBtn = document.getElementById('portal-btn');
-    const modal = document.getElementById('gpk-modal');
-    const confirmBtn = document.getElementById('confirm-btn');
-    const cancelBtn = document.getElementById('cancel-btn');
-    
-    // Only add these if on main page (not gallery)
-    if(portalBtn && modal) {
-        // Star button click - show modal
-        portalBtn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            modal.classList.add('active');
             
-            // Create ripple effect
-            const ripple = document.createElement('span');
-            ripple.className = 'ripple';
-            ripple.style.left = `${e.clientX - portalBtn.getBoundingClientRect().left}px`;
-            ripple.style.top = `${e.clientY - portalBtn.getBoundingClientRect().top}px`;
-            portalBtn.appendChild(ripple);
-            setTimeout(() => ripple.remove(), 600);
-        });
+            if (scene) {
+                while(scene.children.length > 0) { 
+                    scene.remove(scene.children[0]); 
+                }
+            }
+            
+            if (controls) {
+                controls.dispose();
+            }
+            
+            scene = null;
+            camera = null;
+            renderer = null;
+            cardMesh = null;
+            controls = null;
+            isWebGLInitialized = false;
+        }
         
-        // Modal buttons
-        confirmBtn.addEventListener('click', function() {
-            window.location.href = 'gpkUltra3dGallery.html';
-        });
-        
-        cancelBtn.addEventListener('click', function() {
-            modal.classList.remove('active');
-        });
-        
-        // Close modal when clicking outside
-        modal.addEventListener('click', function(e) {
-            if(e.target === modal) {
-                modal.classList.remove('active');
+        // Star Navigation System
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the card grid
+            initCardGrid();
+            
+            // Get elements
+            const portalBtn = document.getElementById('portal-btn');
+            const modal = document.getElementById('gpk-modal');
+            const confirmBtn = document.getElementById('confirm-btn');
+            const cancelBtn = document.getElementById('cancel-btn');
+            
+            // Only add these if on main page (not gallery)
+            if(portalBtn && modal) {
+                // Star button click - show modal
+                portalBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    modal.classList.add('active');
+                    
+                    // Create ripple effect
+                    const ripple = document.createElement('span');
+                    ripple.className = 'ripple';
+                    ripple.style.left = `${e.clientX - portalBtn.getBoundingClientRect().left}px`;
+                    ripple.style.top = `${e.clientY - portalBtn.getBoundingClientRect().top}px`;
+                    portalBtn.appendChild(ripple);
+                    setTimeout(() => ripple.remove(), 600);
+                });
+                
+                // Modal buttons
+                confirmBtn.addEventListener('click', function() {
+                    // Clean up Three.js before navigating
+                    cleanupThreeJS();
+                    window.location.href = 'gpkUltra3dGallery.html';
+                });
+                
+                cancelBtn.addEventListener('click', function() {
+                    modal.classList.remove('active');
+                });
+                
+                // Close modal when clicking outside
+                modal.addEventListener('click', function(e) {
+                    if(e.target === modal) {
+                        modal.classList.remove('active');
+                    }
+                });
+            }
+            
+            // Add return star to gallery page automatically
+            if(window.location.pathname.includes('gpkUltra3dGallery.html')) {
+                const returnBtn = document.createElement('div');
+                returnBtn.className = 'star-portal return-portal';
+                returnBtn.id = 'return-btn';
+                returnBtn.innerHTML = '<span>RETURN TO HUB</span>';
+                document.body.appendChild(returnBtn);
+                
+                returnBtn.addEventListener('click', function() {
+                    window.location.href = 'index.html';
+                });
             }
         });
-    }
-    
-    // Add return star to gallery page automatically
-    if(window.location.pathname.includes('gpkUltra3dGallery.html')) {
-        const returnBtn = document.createElement('div');
-        returnBtn.className = 'star-portal return-portal';
-        returnBtn.id = 'return-btn';
-        returnBtn.innerHTML = '<span>RETURN TO HUB</span>';
-        document.body.appendChild(returnBtn);
         
-        returnBtn.addEventListener('click', function() {
-            window.location.href = 'index.html';
-        });
-    }
-});
-     
-    // Event handlers
-    portalBtn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        modal.classList.add('active');
-        
-        // Create ripple effect
-        const ripple = document.createElement('span');
-        ripple.className = 'ripple';
-        ripple.style.left = `${e.clientX - portalBtn.getBoundingClientRect().left}px`;
-        ripple.style.top = `${e.clientY - portalBtn.getBoundingClientRect().top}px`;
-        portalBtn.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 600);
-    });
-    
-    document.getElementById('confirm-btn').addEventListener('click', function() {
-        window.location.href = 'gpkUltra3dGallery.html';
-    });
-    
-    document.getElementById('cancel-btn').addEventListener('click', function() {
-        modal.classList.remove('active');
-    });
-    
-    modal.addEventListener('click', function(e) {
-        if(e.target === modal) {
-            modal.classList.remove('active');
-        }
-    });
-    
-    // Add return star to gallery page
-    if(window.location.pathname.includes('gpkUltra3dGallery.html')) {
-        const returnBtn = document.createElement('div');
-        returnBtn.className = 'star-portal return-portal';
-        returnBtn.id = 'return-btn';
-        returnBtn.innerHTML = '<span>RETURN TO HUB</span>';
-        document.body.appendChild(returnBtn);
-        
-        returnBtn.addEventListener('click', function() {
-            window.location.href = 'index.html';
-        });
-    }
-});
-        // Initialize the app
-        initCardGrid();
+        // Clean up when page is unloaded
+        window.addEventListener('beforeunload', cleanupThreeJS);
     </script>
-  
-    <div class="modal-content">
-        <h2>GPK ULTRA 3D GALLERY</h2>
-        <p>Ready to enter the immersive 3D card gallery?</p>
-        <button class="modal-btn" id="confirm-btn">LET'S GO!</button>
-        <button class="modal-btn cancel" id="cancel-btn">NOT NOW</button>
-    </div>
-</div>
 </body>
 </html>
