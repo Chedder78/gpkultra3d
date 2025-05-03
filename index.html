@@ -1,542 +1,197 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPK ULTRA 3D Collector's Hub</title>
-    <style>
-        :root {
-            --gpk-red: #ff3e41;
-            --gpk-yellow: #ffde37;
-            --gpk-blue: #2e86ab;
-            --gpk-black: #1a1a1a;
-            --gpk-paper: #f5f5f0;
-        }
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Bangers', cursive;
-        }
-        
-        body {
-            background: var(--gpk-black);
-            color: white;
-            overflow: hidden;
-            touch-action: none;
-            height: 100vh;
-        }
-        
-        #scene-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            touch-action: none;
-        }
-        
-        .header {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background: linear-gradient(135deg, var(--gpk-red), var(--gpk-yellow));
-            padding: 15px;
-            text-align: center;
-            z-index: 100;
-            border-bottom: 4px solid var(--gpk-black);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-        }
-        
-        .logo {
-            font-size: 2.5rem;
-            text-shadow: 3px 3px 0 var(--gpk-blue),
-                         -1px -1px 0 #fff,
-                         1px -1px 0 #fff,
-                         -1px 1px 0 #fff;
-            letter-spacing: 2px;
-        }
-        
-        .mobile-controls {
-            position: fixed;
-            bottom: 20px;
-            width: 100%;
-            display: flex;
-            justify-content: space-around;
-            z-index: 100;
-            padding: 0 20px;
-        }
-        
-        .control-btn {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: var(--gpk-red);
-            color: white;
-            border: 3px solid var(--gpk-yellow);
-            font-size: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 15px rgba(255,222,55,0.5);
-            touch-action: manipulation;
-            user-select: none;
-        }
-        
-        .loading {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: var(--gpk-black);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid var(--gpk-yellow);
-            border-top-color: var(--gpk-red);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-    </style>
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mobile 3D Experience</title>
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      touch-action: none;
+    }
+    #joystick {
+      position: fixed;
+      bottom: 30px;
+      left: 30px;
+      width: 100px;
+      height: 100px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 50%;
+      z-index: 1000;
+    }
+    #joystick-knob {
+      position: absolute;
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 50%;
+      top: 30px;
+      left: 30px;
+    }
+    #interact-btn {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      width: 80px;
+      height: 80px;
+      background: rgba(0,200,255,0.5);
+      border-radius: 50%;
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-family: Arial;
+      font-weight: bold;
+    }
+    .interactive-item {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+  </style>
 </head>
 <body>
-    <div class="loading" id="loading-screen">
-        <div class="loading-spinner"></div>
-        <div>LOADING GPK 3D EXPERIENCE...</div>
-    </div>
+  <a-scene
+    loading-screen="dotsColor: #00ffff; backgroundColor: #111"
+    cursor="rayOrigin: mouse"
+    raycaster="objects: .interactive-item"
+    renderer="antialias: true">
 
-    <div class="header">
-        <div class="logo">GPK ULTRA 3D</div>
-    </div>
+    <!-- Camera -->
+    <a-entity camera look-controls="touchEnabled: true; mouseEnabled: false">
+      <a-cursor></a-cursor>
+    </a-entity>
+
+    <!-- Environment -->
+    <a-box static-body width="20" height="10" depth="0.5" position="0 0 -10" color="#333"></a-box>
+    <a-box static-body width="0.5" height="10" depth="20" position="-10 0 0" color="#333"></a-box>
+    <a-box static-body width="0.5" height="10" depth="20" position="10 0 0" color="#333"></a-box>
+    <a-plane static-body width="50" height="50" rotation="-90 0 0" color="#222233"></a-plane>
+
+    <!-- Interactive Objects -->
+    <a-sphere class="interactive-item" position="0 1 -5" radius="1" color="#FF0000" 
+              data-action="alert" data-message="You touched the red sphere!"></a-sphere>
+    <a-box class="interactive-item" position="3 0.5 -3" width="1.5" height="1.5" depth="1.5" color="#00FF00"
+          data-action="color" data-color="#FF00FF"></a-box>
+    <a-cylinder class="interactive-item" position="-3 1 -4" radius="0.8" height="1.6" color="#0000FF"
+                data-action="rotate"></a-cylinder>
+
+  </a-scene>
+
+  <!-- Mobile Controls -->
+  <div id="joystick">
+    <div id="joystick-knob"></div>
+  </div>
+  <div id="interact-btn">TAP</div>
+
+  <script>
+    // Mobile Movement Controls
+    const joystick = document.getElementById('joystick');
+    const knob = document.getElementById('joystick-knob');
+    const interactBtn = document.getElementById('interact-btn');
+    const camera = document.querySelector('[camera]');
     
-    <div id="scene-container"></div>
+    let touchId = null;
+    let maxJoystickDistance = 40;
+    let moveX = 0;
+    let moveZ = 0;
     
-    <div class="mobile-controls">
-        <button class="control-btn" id="rotate-btn">🔄</button>
-        <button class="control-btn" id="zoom-in-btn">➕</button>
-        <button class="control-btn" id="zoom-out-btn">➖</button>
-        <button class="control-btn" id="flip-btn">🔄</button>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/gsap@3.11.4/dist/gsap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.19.0/dist/cannon-es.js"></script>
+    // Joystick Touch Events
+    joystick.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      touchId = e.touches[0].identifier;
+      updateJoystick(e.touches[0]);
+    });
     
-    <script>
-        // ==============================================
-        // CARD 3D CLASS - Handles individual card behavior
-        // ==============================================
-        class Card3D {
-            constructor(data, scene) {
-                this.data = data;
-                this.scene = scene;
-                this.mesh = null;
-                this.isFlipped = false;
-                this.isDragging = false;
-                this.touchStart = { x: 0, y: 0 };
-                this.currentRotation = { x: 0, y: 0 };
-                this.init();
-            }
-
-            async init() {
-                // Create card geometry with rounded edges
-                const geometry = this.createRoundedCardGeometry(2.8, 3.8, 0.1);
-                
-                // Load textures with fallback
-                const textureLoader = new THREE.TextureLoader();
-                const frontTexture = await this.loadTexture(textureLoader, this.data.imageUrl);
-                const backTexture = await this.loadTexture(textureLoader, this.data.backImage);
-
-                // Create materials with GPK-style shine
-                const frontMaterial = new THREE.MeshStandardMaterial({
-                    map: frontTexture,
-                    roughness: 0.2,
-                    metalness: 0.3,
-                    side: THREE.DoubleSide
-                });
-
-                const backMaterial = new THREE.MeshStandardMaterial({
-                    map: backTexture || this.createGPKPatternTexture(),
-                    roughness: 0.4,
-                    metalness: 0.1,
-                    side: THREE.DoubleSide
-                });
-
-                // Create mesh with both materials
-                this.mesh = new THREE.Mesh(geometry, [frontMaterial, backMaterial]);
-                this.mesh.userData.card = this;
-                this.mesh.castShadow = true;
-                this.mesh.receiveShadow = true;
-            }
-
-            createRoundedCardGeometry(width, height, radius) {
-                const shape = new THREE.Shape();
-                const x = -width/2, y = -height/2;
-                
-                // Rounded rectangle shape
-                shape.moveTo(x, y + radius);
-                shape.lineTo(x, y + height - radius);
-                shape.quadraticCurveTo(x, y + height, x + radius, y + height);
-                shape.lineTo(x + width - radius, y + height);
-                shape.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
-                shape.lineTo(x + width, y + radius);
-                shape.quadraticCurveTo(x + width, y, x + width - radius, y);
-                shape.lineTo(x + radius, y);
-                shape.quadraticCurveTo(x, y, x, y + radius);
-                
-                return new THREE.ExtrudeGeometry(shape, {
-                    depth: 0.05,
-                    bevelEnabled: true,
-                    bevelSize: 0.02,
-                    bevelThickness: 0.02
-                });
-            }
-
-            async loadTexture(loader, url) {
-                return new Promise(resolve => {
-                    if (!url) return resolve(null);
-                    
-                    loader.load(
-                        url,
-                        texture => {
-                            texture.encoding = THREE.sRGBEncoding;
-                            texture.anisotropy = 4;
-                            resolve(texture);
-                        },
-                        undefined,
-                        () => resolve(null)
-                    );
-                });
-            }
-
-            createGPKPatternTexture() {
-                // Create a GPK-style back pattern
-                const canvas = document.createElement('canvas');
-                canvas.width = 1024;
-                canvas.height = 1024;
-                const ctx = canvas.getContext('2d');
-                
-                // Base color
-                ctx.fillStyle = '#ff3e41';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
-                // Diagonal stripes
-                ctx.fillStyle = '#ffde37';
-                ctx.strokeStyle = '#2e86ab';
-                ctx.lineWidth = 10;
-                
-                for (let i = -200; i < canvas.width; i += 50) {
-                    ctx.beginPath();
-                    ctx.moveTo(i, 0);
-                    ctx.lineTo(i + 200, canvas.height);
-                    ctx.lineTo(i + 250, canvas.height);
-                    ctx.lineTo(i + 50, 0);
-                    ctx.closePath();
-                    ctx.fill();
-                    ctx.stroke();
-                }
-                
-                return new THREE.CanvasTexture(canvas);
-            }
-
-            flip(duration = 0.6) {
-                this.isFlipped = !this.isFlipped;
-                gsap.to(this.mesh.rotation, {
-                    y: this.isFlipped ? Math.PI : 0,
-                    duration: duration,
-                    ease: "back.out(1.7)"
-                });
-            }
-
-            addToScene(position, rotation) {
-                this.mesh.position.copy(position);
-                this.mesh.rotation.set(rotation.x, rotation.y, rotation.z);
-                this.scene.add(this.mesh);
-            }
-
-            handleTouchStart(e) {
-                this.isDragging = true;
-                this.touchStart = {
-                    x: e.touches[0].clientX,
-                    y: e.touches[0].clientY
-                };
-                e.preventDefault();
-            }
-
-            handleTouchMove(e) {
-                if (!this.isDragging) return;
-                
-                const deltaX = e.touches[0].clientX - this.touchStart.x;
-                const deltaY = e.touches[0].clientY - this.touchStart.y;
-                
-                // Smooth rotational movement with inertia
-                this.currentRotation.y += deltaX * 0.005;
-                this.currentRotation.x += deltaY * 0.005;
-                
-                // Apply rotation with easing
-                gsap.to(this.mesh.rotation, {
-                    x: this.currentRotation.x,
-                    y: this.currentRotation.y,
-                    duration: 0.3
-                });
-                
-                this.touchStart = {
-                    x: e.touches[0].clientX,
-                    y: e.touches[0].clientY
-                };
-                e.preventDefault();
-            }
-
-            handleTouchEnd() {
-                this.isDragging = false;
-                
-                // Apply slight bounce back effect
-                gsap.to(this.mesh.rotation, {
-                    x: Math.round(this.currentRotation.x / (Math.PI/4)) * (Math.PI/4),
-                    y: Math.round(this.currentRotation.y / (Math.PI/4)) * (Math.PI/4),
-                    duration: 0.5,
-                    ease: "elastic.out(1, 0.5)"
-                });
-            }
+    document.addEventListener('touchmove', (e) => {
+      if (!touchId) return;
+      const touch = Array.from(e.touches).find(t => t.identifier === touchId);
+      if (touch) updateJoystick(touch);
+    });
+    
+    document.addEventListener('touchend', () => {
+      touchId = null;
+      knob.style.transform = 'translate(30px, 30px)';
+      moveX = 0;
+      moveZ = 0;
+    });
+    
+    function updateJoystick(touch) {
+      const rect = joystick.getBoundingClientRect();
+      const centerX = rect.left + rect.width/2;
+      const centerY = rect.top + rect.height/2;
+      const deltaX = touch.clientX - centerX;
+      const deltaY = touch.clientY - centerY;
+      const distance = Math.sqrt(deltaX*deltaX + deltaY*deltaY);
+      const angle = Math.atan2(deltaY, deltaX);
+      
+      const limitedDistance = Math.min(distance, maxJoystickDistance);
+      const limitedX = Math.cos(angle) * limitedDistance;
+      const limitedY = Math.sin(angle) * limitedDistance;
+      
+      knob.style.transform = `translate(${limitedX + 30}px, ${limitedY + 30}px)`;
+      
+      // Movement direction (relative to camera)
+      moveX = limitedX / maxJoystickDistance * 0.1;
+      moveZ = limitedY / maxJoystickDistance * 0.1;
+    }
+    
+    // Interaction System
+    interactBtn.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const cursor = document.querySelector('a-cursor');
+      if (cursor.components.raycaster.intersectedEl) {
+        const el = cursor.components.raycaster.intersectedEl;
+        if (el.classList.contains('interactive-item')) {
+          handleInteraction(el);
         }
-
-        // ==============================================
-        // GPK ULTRA 3D APP - Main Application Class
-        // ==============================================
-        class GPKUltra3D {
-            constructor() {
-                // Core Three.js components
-                this.scene = null;
-                this.camera = null;
-                this.renderer = null;
-                this.controls = null;
-                
-                // Card system
-                this.currentCard = null;
-                this.cards = [];
-                this.currentZoom = 1;
-                
-                // Physics
-                this.physicsWorld = null;
-                this.clock = new THREE.Clock();
-                
-                // Initialize
-                this.init();
-            }
-
-            async init() {
-                // Setup core Three.js components
-                this.setupRenderer();
-                this.setupScene();
-                this.setupCamera();
-                this.setupLights();
-                this.setupPhysics();
-                
-                // Load and setup cards
-                await this.loadCards();
-                
-                // Setup controls
-                this.setupControls();
-                
-                // Start animation loop
-                this.animate();
-                
-                // Hide loading screen
-                gsap.to("#loading-screen", { opacity: 0, duration: 0.5, onComplete: () => {
-                    document.getElementById('loading-screen').style.display = 'none';
-                }});
-            }
-
-            setupRenderer() {
-                this.renderer = new THREE.WebGLRenderer({
-                    antialias: true,
-                    alpha: false,
-                    powerPreference: "high-performance"
-                });
-                this.renderer.setSize(window.innerWidth, window.innerHeight);
-                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-                this.renderer.shadowMap.enabled = true;
-                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-                document.getElementById('scene-container').appendChild(this.renderer.domElement);
-                
-                // Handle window resize
-                window.addEventListener('resize', () => {
-                    this.camera.aspect = window.innerWidth / window.innerHeight;
-                    this.camera.updateProjectionMatrix();
-                    this.renderer.setSize(window.innerWidth, window.innerHeight);
-                });
-            }
-
-            setupScene() {
-                this.scene = new THREE.Scene();
-                this.scene.background = new THREE.Color(0x111111);
-                
-                // Add subtle fog
-                this.scene.fog = new THREE.FogExp2(0x111111, 0.02);
-            }
-
-            setupCamera() {
-                this.camera = new THREE.PerspectiveCamera(
-                    60, 
-                    window.innerWidth / window.innerHeight, 
-                    0.1, 
-                    100
-                );
-                this.camera.position.set(0, 0, 5);
-            }
-
-            setupLights() {
-                // Ambient light
-                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-                this.scene.add(ambientLight);
-                
-                // Directional light with shadow
-                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-                directionalLight.position.set(3, 5, 2);
-                directionalLight.castShadow = true;
-                directionalLight.shadow.mapSize.width = 1024;
-                directionalLight.shadow.mapSize.height = 1024;
-                directionalLight.shadow.camera.near = 0.5;
-                directionalLight.shadow.camera.far = 20;
-                this.scene.add(directionalLight);
-                
-                // Back light
-                const backLight = new THREE.DirectionalLight(0xffde37, 0.4);
-                backLight.position.set(-3, 2, -2);
-                this.scene.add(backLight);
-            }
-
-            setupPhysics() {
-                this.physicsWorld = new CANNON.World({
-                    gravity: new CANNON.Vec3(0, -9.82, 0),
-                    broadphase: new CANNON.NaiveBroadphase(),
-                    solver: new CANNON.GSSolver()
-                });
-                
-                // Create ground plane
-                const groundShape = new CANNON.Plane();
-                const groundBody = new CANNON.Body({ mass: 0, shape: groundShape });
-                groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
-                this.physicsWorld.addBody(groundBody);
-            }
-
-            async loadCards() {
-                // NOTE: Replace with your actual card data
-                const cardData = [
-                    {
-                        id: 1,
-                        title: "OS1 Custom Pack",
-                        imageUrl: "assets/textures/os1-front.jpg",
-                        backImage: "assets/textures/os1-back.jpg",
-                        value: 125.00
-                    }
-                    // Add more cards as needed
-                ];
-                
-                // Load each card
-                for (const data of cardData) {
-                    const card = new Card3D(data, this.scene);
-                    await card.init();
-                    card.addToScene(
-                        new THREE.Vector3(0, 0, 0),
-                        new THREE.Euler(0, 0, 0)
-                    );
-                    this.cards.push(card);
-                }
-                
-                // Set the first card as current
-                this.currentCard = this.cards[0];
-            }
-
-            setupControls() {
-                const canvas = this.renderer.domElement;
-                
-                // Touch event handlers
-                canvas.addEventListener('touchstart', (e) => {
-                    if (this.currentCard) {
-                        this.currentCard.handleTouchStart(e);
-                    }
-                }, { passive: false });
-                
-                canvas.addEventListener('touchmove', (e) => {
-                    if (this.currentCard) {
-                        this.currentCard.handleTouchMove(e);
-                    }
-                }, { passive: false });
-                
-                canvas.addEventListener('touchend', () => {
-                    if (this.currentCard) {
-                        this.currentCard.handleTouchEnd();
-                    }
-                });
-                
-                // Control buttons
-                document.getElementById('rotate-btn').addEventListener('click', () => {
-                    if (this.currentCard) {
-                        gsap.to(this.currentCard.mesh.rotation, {
-                            y: this.currentCard.mesh.rotation.y + Math.PI/2,
-                            duration: 0.5,
-                            ease: "power2.out"
-                        });
-                    }
-                });
-                
-                document.getElementById('zoom-in-btn').addEventListener('click', () => {
-                    this.currentZoom = Math.min(this.currentZoom + 0.2, 3);
-                    gsap.to(this.camera.position, {
-                        z: 5 / this.currentZoom,
-                        duration: 0.3
-                    });
-                });
-                
-                document.getElementById('zoom-out-btn').addEventListener('click', () => {
-                    this.currentZoom = Math.max(this.currentZoom - 0.2, 0.5);
-                    gsap.to(this.camera.position, {
-                        z: 5 / this.currentZoom,
-                        duration: 0.3
-                    });
-                });
-                
-                document.getElementById('flip-btn').addEventListener('click', () => {
-                    if (this.currentCard) {
-                        this.currentCard.flip();
-                    }
-                });
-            }
-
-            animate() {
-                requestAnimationFrame(() => this.animate());
-                
-                // Update physics
-                const deltaTime = this.clock.getDelta();
-                this.physicsWorld.step(1/60, deltaTime, 3);
-                
-                // Update Three.js scene
-                this.renderer.render(this.scene, this.camera);
-            }
-        }
-
-        // Initialize the app when the page loads
-        document.addEventListener('DOMContentLoaded', () => {
-            const app = new GPKUltra3D();
-        });
-    </script>
+      }
+    });
+    
+    function handleInteraction(el) {
+      const action = el.getAttribute('data-action');
+      
+      switch(action) {
+        case 'alert':
+          alert(el.getAttribute('data-message'));
+          break;
+          
+        case 'color':
+          const newColor = el.getAttribute('data-color');
+          el.setAttribute('color', newColor);
+          break;
+          
+        case 'rotate':
+          el.object3D.rotation.y += Math.PI/4;
+          break;
+      }
+      
+      // Visual feedback
+      el.setAttribute('scale', '1.2 1.2 1.2');
+      setTimeout(() => {
+        el.setAttribute('scale', '1 1 1');
+      }, 200);
+    }
+    
+    // Movement Update Loop
+    function updateCameraPosition() {
+      if (moveX !== 0 || moveZ !== 0) {
+        const direction = new THREE.Vector3(moveX, 0, moveZ);
+        direction.applyQuaternion(camera.object3D.quaternion);
+        const position = camera.getAttribute('position');
+        position.x += direction.x;
+        position.z += direction.z;
+        camera.setAttribute('position', position);
+      }
+      requestAnimationFrame(updateCameraPosition);
+    }
+    updateCameraPosition();
+  </script>
 </body>
 </html>
