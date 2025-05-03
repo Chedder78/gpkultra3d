@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPK ULTRA 3D Mobile Viewer</title>
+    <title>GPK ULTRA 3D Collector's Hub</title>
     <style>
         :root {
             --gpk-red: #ff3e41;
@@ -26,10 +26,9 @@
             overflow: hidden;
             touch-action: none;
             height: 100vh;
-            width: 100vw;
         }
         
-        #canvas-container {
+        #scene-container {
             position: fixed;
             top: 0;
             left: 0;
@@ -38,7 +37,6 @@
             touch-action: none;
         }
         
-        /* GPK Styled Header */
         .header {
             position: fixed;
             top: 0;
@@ -60,8 +58,7 @@
             letter-spacing: 2px;
         }
         
-        /* Mobile Controls */
-        .controls {
+        .mobile-controls {
             position: fixed;
             bottom: 20px;
             width: 100%;
@@ -87,21 +84,6 @@
             user-select: none;
         }
         
-        .ar-btn {
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: var(--gpk-blue);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 30px;
-            border: 2px solid var(--gpk-yellow);
-            font-size: 1rem;
-            z-index: 100;
-            box-shadow: 0 0 10px rgba(46,134,171,0.7);
-        }
-        
-        /* Loading Screen */
         .loading {
             position: fixed;
             top: 0;
@@ -129,327 +111,432 @@
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
-        
-        /* Damage Highlight Toggle */
-        .damage-toggle {
-            position: fixed;
-            top: 80px;
-            left: 20px;
-            background: rgba(0,0,0,0.7);
-            padding: 10px;
-            border-radius: 20px;
-            border: 2px solid var(--gpk-red);
-            display: flex;
-            align-items: center;
-            z-index: 100;
-        }
-        
-        .damage-toggle label {
-            margin-left: 8px;
-            font-size: 0.9rem;
-            color: white;
-        }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Loading Screen -->
     <div class="loading" id="loading-screen">
         <div class="loading-spinner"></div>
         <div>LOADING GPK 3D EXPERIENCE...</div>
     </div>
 
-    <!-- Header -->
     <div class="header">
         <div class="logo">GPK ULTRA 3D</div>
     </div>
     
-    <!-- AR Button (hidden until WebXR is supported) -->
-    <button class="ar-btn" id="ar-btn" style="display: none;">AR MODE</button>
+    <div id="scene-container"></div>
     
-    <!-- Damage Highlight Toggle -->
-    <div class="damage-toggle">
-        <input type="checkbox" id="damage-toggle">
-        <label for="damage-toggle">SHOW DAMAGE</label>
-    </div>
-    
-    <!-- Three.js Canvas -->
-    <div id="canvas-container"></div>
-    
-    <!-- Mobile Controls -->
-    <div class="controls">
+    <div class="mobile-controls">
         <button class="control-btn" id="rotate-btn">🔄</button>
         <button class="control-btn" id="zoom-in-btn">➕</button>
         <button class="control-btn" id="zoom-out-btn">➖</button>
         <button class="control-btn" id="flip-btn">🔄</button>
     </div>
 
-    <!-- Three.js and Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.11.4/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/cannon-es@0.19.0/dist/cannon-es.js"></script>
     
     <script>
         // ==============================================
-        // NOTE: CONFIGURATION - EDIT THESE VALUES
+        // CARD 3D CLASS - Handles individual card behavior
         // ==============================================
-        const CONFIG = {
-            // Path to your 3D card model (GLB format recommended)
-            modelPath: 'assets/models/gpk-card.glb', // <-- REPLACE WITH YOUR MODEL PATH
-            
-            // Initial card scale (adjust based on your model size)
-            cardScale: 0.8,
-            
-            // Damage overlay texture (red highlights)
-            damageTexturePath: 'assets/textures/damage-map.png', // <-- REPLACE WITH DAMAGE MAP PATH
-            
-            // Holographic effect texture (optional)
-            hologramTexturePath: 'assets/textures/hologram.png', // <-- REPLACE WITH HOLOGRAM PATH
-            
-            // Card back texture (shown when flipped)
-            backTexturePath: 'assets/textures/card-back.png' // <-- REPLACE WITH BACK TEXTURE PATH
-        };
-        
-        // ==============================================
-        // MAIN APPLICATION
-        // ==============================================
-        let scene, camera, renderer, card, damageOverlay;
-        let isDragging = false;
-        let previousTouch = { x: 0, y: 0 };
-        let currentZoom = 1;
-        let showDamage = false;
-        
-        // Initialize the 3D viewer
-        async function init() {
-            // Check for WebXR support
-            if ('xr' in navigator) {
-                document.getElementById('ar-btn').style.display = 'block';
+        class Card3D {
+            constructor(data, scene) {
+                this.data = data;
+                this.scene = scene;
+                this.mesh = null;
+                this.isFlipped = false;
+                this.isDragging = false;
+                this.touchStart = { x: 0, y: 0 };
+                this.currentRotation = { x: 0, y: 0 };
+                this.init();
             }
-            
-            // Setup Three.js scene
-            setupScene();
-            
-            // Load the 3D card
-            await loadCard();
-            
-            // Setup damage overlay system
-            setupDamageSystem();
-            
-            // Setup event listeners
-            setupEventListeners();
-            
-            // Hide loading screen
-            document.getElementById('loading-screen').style.opacity = 0;
-            setTimeout(() => {
-                document.getElementById('loading-screen').style.display = 'none';
-            }, 500);
-            
-            // Start animation loop
-            animate();
-        }
-        
-        function setupScene() {
-            // Create scene
-            scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x121212);
-            
-            // Setup camera (closer for mobile)
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-            camera.position.z = 3;
-            
-            // Create renderer
-            renderer = new THREE.WebGLRenderer({ 
-                antialias: true,
-                powerPreference: "high-performance"
-            });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-            document.getElementById('canvas-container').appendChild(renderer.domElement);
-            
-            // Add lighting
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(1, 1, 2);
-            scene.add(directionalLight);
-        }
-        
-        async function loadCard() {
-            return new Promise((resolve, reject) => {
-                const loader = new THREE.GLTFLoader();
+
+            async init() {
+                // Create card geometry with rounded edges
+                const geometry = this.createRoundedCardGeometry(2.8, 3.8, 0.1);
                 
-                // NOTE: This loads your 3D model - ensure path is correct
-                loader.load(
-                    CONFIG.modelPath,
-                    (gltf) => {
-                        card = gltf.scene;
-                        card.scale.set(CONFIG.cardScale, CONFIG.cardScale, CONFIG.cardScale);
-                        
-                        // NOTE: Adjust these positions if your model isn't centered
-                        card.position.set(0, 0, 0);
-                        card.rotation.set(0, 0, 0);
-                        
-                        scene.add(card);
-                        resolve();
-                    },
-                    undefined,
-                    (error) => {
-                        console.error('Error loading 3D card:', error);
-                        alert('Failed to load 3D card');
-                        reject(error);
-                    }
-                );
-            });
-        }
-        
-        function setupDamageSystem() {
-            // NOTE: This creates a red overlay for damaged areas
-            // You'll need to create a damage map texture where:
-            // - White = damaged areas
-            // - Black = undamaged areas
-            
-            const textureLoader = new THREE.TextureLoader();
-            textureLoader.load(
-                CONFIG.damageTexturePath,
-                (texture) => {
-                    const geometry = new THREE.PlaneGeometry(3, 4);
-                    const material = new THREE.MeshBasicMaterial({
-                        map: texture,
-                        transparent: true,
-                        opacity: 0,
-                        color: 0xff0000,
-                        blending: THREE.AdditiveBlending
-                    });
+                // Load textures with fallback
+                const textureLoader = new THREE.TextureLoader();
+                const frontTexture = await this.loadTexture(textureLoader, this.data.imageUrl);
+                const backTexture = await this.loadTexture(textureLoader, this.data.backImage);
+
+                // Create materials with GPK-style shine
+                const frontMaterial = new THREE.MeshStandardMaterial({
+                    map: frontTexture,
+                    roughness: 0.2,
+                    metalness: 0.3,
+                    side: THREE.DoubleSide
+                });
+
+                const backMaterial = new THREE.MeshStandardMaterial({
+                    map: backTexture || this.createGPKPatternTexture(),
+                    roughness: 0.4,
+                    metalness: 0.1,
+                    side: THREE.DoubleSide
+                });
+
+                // Create mesh with both materials
+                this.mesh = new THREE.Mesh(geometry, [frontMaterial, backMaterial]);
+                this.mesh.userData.card = this;
+                this.mesh.castShadow = true;
+                this.mesh.receiveShadow = true;
+            }
+
+            createRoundedCardGeometry(width, height, radius) {
+                const shape = new THREE.Shape();
+                const x = -width/2, y = -height/2;
+                
+                // Rounded rectangle shape
+                shape.moveTo(x, y + radius);
+                shape.lineTo(x, y + height - radius);
+                shape.quadraticCurveTo(x, y + height, x + radius, y + height);
+                shape.lineTo(x + width - radius, y + height);
+                shape.quadraticCurveTo(x + width, y + height, x + width, y + height - radius);
+                shape.lineTo(x + width, y + radius);
+                shape.quadraticCurveTo(x + width, y, x + width - radius, y);
+                shape.lineTo(x + radius, y);
+                shape.quadraticCurveTo(x, y, x, y + radius);
+                
+                return new THREE.ExtrudeGeometry(shape, {
+                    depth: 0.05,
+                    bevelEnabled: true,
+                    bevelSize: 0.02,
+                    bevelThickness: 0.02
+                });
+            }
+
+            async loadTexture(loader, url) {
+                return new Promise(resolve => {
+                    if (!url) return resolve(null);
                     
-                    damageOverlay = new THREE.Mesh(geometry, material);
-                    damageOverlay.visible = false;
-                    scene.add(damageOverlay);
-                },
-                undefined,
-                (error) => {
-                    console.warn('Could not load damage texture:', error);
+                    loader.load(
+                        url,
+                        texture => {
+                            texture.encoding = THREE.sRGBEncoding;
+                            texture.anisotropy = 4;
+                            resolve(texture);
+                        },
+                        undefined,
+                        () => resolve(null)
+                    );
+                });
+            }
+
+            createGPKPatternTexture() {
+                // Create a GPK-style back pattern
+                const canvas = document.createElement('canvas');
+                canvas.width = 1024;
+                canvas.height = 1024;
+                const ctx = canvas.getContext('2d');
+                
+                // Base color
+                ctx.fillStyle = '#ff3e41';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Diagonal stripes
+                ctx.fillStyle = '#ffde37';
+                ctx.strokeStyle = '#2e86ab';
+                ctx.lineWidth = 10;
+                
+                for (let i = -200; i < canvas.width; i += 50) {
+                    ctx.beginPath();
+                    ctx.moveTo(i, 0);
+                    ctx.lineTo(i + 200, canvas.height);
+                    ctx.lineTo(i + 250, canvas.height);
+                    ctx.lineTo(i + 50, 0);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
                 }
-            );
+                
+                return new THREE.CanvasTexture(canvas);
+            }
+
+            flip(duration = 0.6) {
+                this.isFlipped = !this.isFlipped;
+                gsap.to(this.mesh.rotation, {
+                    y: this.isFlipped ? Math.PI : 0,
+                    duration: duration,
+                    ease: "back.out(1.7)"
+                });
+            }
+
+            addToScene(position, rotation) {
+                this.mesh.position.copy(position);
+                this.mesh.rotation.set(rotation.x, rotation.y, rotation.z);
+                this.scene.add(this.mesh);
+            }
+
+            handleTouchStart(e) {
+                this.isDragging = true;
+                this.touchStart = {
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY
+                };
+                e.preventDefault();
+            }
+
+            handleTouchMove(e) {
+                if (!this.isDragging) return;
+                
+                const deltaX = e.touches[0].clientX - this.touchStart.x;
+                const deltaY = e.touches[0].clientY - this.touchStart.y;
+                
+                // Smooth rotational movement with inertia
+                this.currentRotation.y += deltaX * 0.005;
+                this.currentRotation.x += deltaY * 0.005;
+                
+                // Apply rotation with easing
+                gsap.to(this.mesh.rotation, {
+                    x: this.currentRotation.x,
+                    y: this.currentRotation.y,
+                    duration: 0.3
+                });
+                
+                this.touchStart = {
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY
+                };
+                e.preventDefault();
+            }
+
+            handleTouchEnd() {
+                this.isDragging = false;
+                
+                // Apply slight bounce back effect
+                gsap.to(this.mesh.rotation, {
+                    x: Math.round(this.currentRotation.x / (Math.PI/4)) * (Math.PI/4),
+                    y: Math.round(this.currentRotation.y / (Math.PI/4)) * (Math.PI/4),
+                    duration: 0.5,
+                    ease: "elastic.out(1, 0.5)"
+                });
+            }
         }
-        
-        function setupEventListeners() {
-            const canvas = renderer.domElement;
-            
-            // Touch rotation controls
-            canvas.addEventListener('touchstart', (e) => {
-                isDragging = true;
-                previousTouch = {
-                    x: e.touches[0].clientX,
-                    y: e.touches[0].clientY
-                };
-                e.preventDefault();
-            }, { passive: false });
-            
-            canvas.addEventListener('touchmove', (e) => {
-                if (!isDragging || !card) return;
+
+        // ==============================================
+        // GPK ULTRA 3D APP - Main Application Class
+        // ==============================================
+        class GPKUltra3D {
+            constructor() {
+                // Core Three.js components
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.controls = null;
                 
-                const deltaX = e.touches[0].clientX - previousTouch.x;
-                const deltaY = e.touches[0].clientY - previousTouch.y;
+                // Card system
+                this.currentCard = null;
+                this.cards = [];
+                this.currentZoom = 1;
                 
-                card.rotation.y += deltaX * 0.01;
-                card.rotation.x += deltaY * 0.01;
+                // Physics
+                this.physicsWorld = null;
+                this.clock = new THREE.Clock();
                 
-                previousTouch = {
-                    x: e.touches[0].clientX,
-                    y: e.touches[0].clientY
-                };
-                e.preventDefault();
-            }, { passive: false });
-            
-            canvas.addEventListener('touchend', () => {
-                isDragging = false;
-            });
-            
-            // Control buttons
-            document.getElementById('rotate-btn').addEventListener('click', () => {
-                if (card) {
-                    gsap.to(card.rotation, { 
-                        y: card.rotation.y + Math.PI/2, 
-                        duration: 0.5,
-                        ease: "power2.out"
-                    });
-                }
-            });
-            
-            document.getElementById('zoom-in-btn').addEventListener('click', () => {
-                currentZoom = Math.min(currentZoom + 0.2, 3);
-                gsap.to(camera.position, { 
-                    z: 3 / currentZoom,
-                    duration: 0.3
+                // Initialize
+                this.init();
+            }
+
+            async init() {
+                // Setup core Three.js components
+                this.setupRenderer();
+                this.setupScene();
+                this.setupCamera();
+                this.setupLights();
+                this.setupPhysics();
+                
+                // Load and setup cards
+                await this.loadCards();
+                
+                // Setup controls
+                this.setupControls();
+                
+                // Start animation loop
+                this.animate();
+                
+                // Hide loading screen
+                gsap.to("#loading-screen", { opacity: 0, duration: 0.5, onComplete: () => {
+                    document.getElementById('loading-screen').style.display = 'none';
+                }});
+            }
+
+            setupRenderer() {
+                this.renderer = new THREE.WebGLRenderer({
+                    antialias: true,
+                    alpha: false,
+                    powerPreference: "high-performance"
                 });
-            });
-            
-            document.getElementById('zoom-out-btn').addEventListener('click', () => {
-                currentZoom = Math.max(currentZoom - 0.2, 0.5);
-                gsap.to(camera.position, { 
-                    z: 3 / currentZoom,
-                    duration: 0.3
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                this.renderer.shadowMap.enabled = true;
+                this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                document.getElementById('scene-container').appendChild(this.renderer.domElement);
+                
+                // Handle window resize
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
                 });
-            });
-            
-            document.getElementById('flip-btn').addEventListener('click', () => {
-                if (card) {
-                    gsap.to(card.rotation, { 
-                        y: card.rotation.y + Math.PI, 
-                        duration: 0.7,
-                        ease: "back.out(1.2)"
-                    });
+            }
+
+            setupScene() {
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x111111);
+                
+                // Add subtle fog
+                this.scene.fog = new THREE.FogExp2(0x111111, 0.02);
+            }
+
+            setupCamera() {
+                this.camera = new THREE.PerspectiveCamera(
+                    60, 
+                    window.innerWidth / window.innerHeight, 
+                    0.1, 
+                    100
+                );
+                this.camera.position.set(0, 0, 5);
+            }
+
+            setupLights() {
+                // Ambient light
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+                this.scene.add(ambientLight);
+                
+                // Directional light with shadow
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(3, 5, 2);
+                directionalLight.castShadow = true;
+                directionalLight.shadow.mapSize.width = 1024;
+                directionalLight.shadow.mapSize.height = 1024;
+                directionalLight.shadow.camera.near = 0.5;
+                directionalLight.shadow.camera.far = 20;
+                this.scene.add(directionalLight);
+                
+                // Back light
+                const backLight = new THREE.DirectionalLight(0xffde37, 0.4);
+                backLight.position.set(-3, 2, -2);
+                this.scene.add(backLight);
+            }
+
+            setupPhysics() {
+                this.physicsWorld = new CANNON.World({
+                    gravity: new CANNON.Vec3(0, -9.82, 0),
+                    broadphase: new CANNON.NaiveBroadphase(),
+                    solver: new CANNON.GSSolver()
+                });
+                
+                // Create ground plane
+                const groundShape = new CANNON.Plane();
+                const groundBody = new CANNON.Body({ mass: 0, shape: groundShape });
+                groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
+                this.physicsWorld.addBody(groundBody);
+            }
+
+            async loadCards() {
+                // NOTE: Replace with your actual card data
+                const cardData = [
+                    {
+                        id: 1,
+                        title: "OS1 Custom Pack",
+                        imageUrl: "assets/textures/os1-front.jpg",
+                        backImage: "assets/textures/os1-back.jpg",
+                        value: 125.00
+                    }
+                    // Add more cards as needed
+                ];
+                
+                // Load each card
+                for (const data of cardData) {
+                    const card = new Card3D(data, this.scene);
+                    await card.init();
+                    card.addToScene(
+                        new THREE.Vector3(0, 0, 0),
+                        new THREE.Euler(0, 0, 0)
+                    );
+                    this.cards.push(card);
                 }
-            });
-            
-            // AR button
-            document.getElementById('ar-btn').addEventListener('click', async () => {
-                try {
-                    const xrSession = await navigator.xr.requestSession("immersive-ar");
-                    renderer.xr.enabled = true;
-                    renderer.setAnimationLoop(() => {
-                        renderer.render(scene, camera);
-                    });
-                } catch (error) {
-                    alert("AR not available: " + error.message);
-                }
-            });
-            
-            // Damage toggle
-            document.getElementById('damage-toggle').addEventListener('change', (e) => {
-                showDamage = e.target.checked;
-                if (damageOverlay) {
-                    damageOverlay.visible = showDamage;
-                    gsap.to(damageOverlay.material, {
-                        opacity: showDamage ? 0.7 : 0,
+                
+                // Set the first card as current
+                this.currentCard = this.cards[0];
+            }
+
+            setupControls() {
+                const canvas = this.renderer.domElement;
+                
+                // Touch event handlers
+                canvas.addEventListener('touchstart', (e) => {
+                    if (this.currentCard) {
+                        this.currentCard.handleTouchStart(e);
+                    }
+                }, { passive: false });
+                
+                canvas.addEventListener('touchmove', (e) => {
+                    if (this.currentCard) {
+                        this.currentCard.handleTouchMove(e);
+                    }
+                }, { passive: false });
+                
+                canvas.addEventListener('touchend', () => {
+                    if (this.currentCard) {
+                        this.currentCard.handleTouchEnd();
+                    }
+                });
+                
+                // Control buttons
+                document.getElementById('rotate-btn').addEventListener('click', () => {
+                    if (this.currentCard) {
+                        gsap.to(this.currentCard.mesh.rotation, {
+                            y: this.currentCard.mesh.rotation.y + Math.PI/2,
+                            duration: 0.5,
+                            ease: "power2.out"
+                        });
+                    }
+                });
+                
+                document.getElementById('zoom-in-btn').addEventListener('click', () => {
+                    this.currentZoom = Math.min(this.currentZoom + 0.2, 3);
+                    gsap.to(this.camera.position, {
+                        z: 5 / this.currentZoom,
                         duration: 0.3
                     });
-                }
-            });
-            
-            // Window resize
-            window.addEventListener('resize', () => {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            });
-        }
-        
-        function animate() {
-            requestAnimationFrame(animate);
-            
-            // Add subtle hover effect
-            if (card && !isDragging) {
-                card.rotation.y += 0.002;
-                card.position.y = Math.sin(Date.now() * 0.001) * 0.05;
+                });
+                
+                document.getElementById('zoom-out-btn').addEventListener('click', () => {
+                    this.currentZoom = Math.max(this.currentZoom - 0.2, 0.5);
+                    gsap.to(this.camera.position, {
+                        z: 5 / this.currentZoom,
+                        duration: 0.3
+                    });
+                });
+                
+                document.getElementById('flip-btn').addEventListener('click', () => {
+                    if (this.currentCard) {
+                        this.currentCard.flip();
+                    }
+                });
             }
-            
-            renderer.render(scene, camera);
+
+            animate() {
+                requestAnimationFrame(() => this.animate());
+                
+                // Update physics
+                const deltaTime = this.clock.getDelta();
+                this.physicsWorld.step(1/60, deltaTime, 3);
+                
+                // Update Three.js scene
+                this.renderer.render(this.scene, this.camera);
+            }
         }
-        
-        // Start the application when loaded
-        window.addEventListener('load', init);
+
+        // Initialize the app when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            const app = new GPKUltra3D();
+        });
     </script>
 </body>
 </html>
