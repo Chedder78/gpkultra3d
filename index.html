@@ -521,7 +521,39 @@
                     scene.add(cardMesh);
                 }
             );
-            
+            import { useState } from 'react';
+import { Canvas } from '@react-three/fiber';
+import { TouchControls, AdaptiveDpr, AdaptiveEvents } from '@react-three/drei';
+
+export default function GPKApp() {
+  const [viewMode, setViewMode] = useState('list'); // 'list' or '3d'
+  const [selectedCard, setSelectedCard] = useState(null);
+
+  // Sample card data
+  const cards = [
+    { id: 1, name: 'Adam Bomb', imageUrl: '/adam-bomb.jpg', modelUrl: '/models/adam.glb' },
+    { id: 2, name: 'Blasted Billy', imageUrl: '/billy.jpg', modelUrl: '/models/billy.glb' }
+  ];
+
+  return (
+    <div className="mobile-container">
+      {viewMode === 'list' ? (
+        <CardListView 
+          cards={cards} 
+          onSelectCard={(card) => {
+            setSelectedCard(card);
+            setViewMode('3d');
+          }}
+        />
+      ) : (
+        <Card3DView 
+          card={selectedCard} 
+          onBack={() => setViewMode('list')}
+        />
+      )}
+    </div>
+  );
+        }
             camera.position.z = 5;
             
             // Add controls
