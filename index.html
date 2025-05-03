@@ -3,39 +3,72 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>GPK ULTRA 3D Mobile</title>
+    <title>GPK ULTRA 3D Mobile Viewer</title>
     <style>
         :root {
             --gpk-red: #ff3e41;
             --gpk-yellow: #ffde37;
             --gpk-blue: #2e86ab;
             --gpk-black: #1a1a1a;
+            --gpk-paper: #f5f5f0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Bangers', cursive;
         }
         
         body {
-            margin: 0;
-            padding: 0;
+            background: var(--gpk-black);
+            color: white;
             overflow: hidden;
             touch-action: none;
-            font-family: 'Bangers', cursive;
-            background: #121212;
-            color: white;
+            height: 100vh;
+            width: 100vw;
         }
         
         #canvas-container {
             position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
             touch-action: none;
         }
         
-        .mobile-controls {
+        /* GPK Styled Header */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: linear-gradient(135deg, var(--gpk-red), var(--gpk-yellow));
+            padding: 15px;
+            text-align: center;
+            z-index: 100;
+            border-bottom: 4px solid var(--gpk-black);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .logo {
+            font-size: 2.5rem;
+            text-shadow: 3px 3px 0 var(--gpk-blue),
+                         -1px -1px 0 #fff,
+                         1px -1px 0 #fff,
+                         -1px 1px 0 #fff;
+            letter-spacing: 2px;
+        }
+        
+        /* Mobile Controls */
+        .controls {
             position: fixed;
             bottom: 20px;
             width: 100%;
             display: flex;
             justify-content: space-around;
             z-index: 100;
+            padding: 0 20px;
         }
         
         .control-btn {
@@ -51,35 +84,372 @@
             justify-content: center;
             box-shadow: 0 0 15px rgba(255,222,55,0.5);
             touch-action: manipulation;
+            user-select: none;
         }
         
-        .ar-button {
+        .ar-btn {
             position: fixed;
-            top: 20px;
+            top: 80px;
             right: 20px;
             background: var(--gpk-blue);
             color: white;
             padding: 10px 15px;
             border-radius: 30px;
-            font-family: 'Bangers';
+            border: 2px solid var(--gpk-yellow);
+            font-size: 1rem;
             z-index: 100;
+            box-shadow: 0 0 10px rgba(46,134,171,0.7);
+        }
+        
+        /* Loading Screen */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gpk-black);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--gpk-yellow);
+            border-top-color: var(--gpk-red);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Damage Highlight Toggle */
+        .damage-toggle {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            background: rgba(0,0,0,0.7);
+            padding: 10px;
+            border-radius: 20px;
+            border: 2px solid var(--gpk-red);
+            display: flex;
+            align-items: center;
+            z-index: 100;
+        }
+        
+        .damage-toggle label {
+            margin-left: 8px;
+            font-size: 0.9rem;
+            color: white;
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
 </head>
 <body>
-    <button class="ar-button" id="ar-button">AR MODE</button>
+    <!-- Loading Screen -->
+    <div class="loading" id="loading-screen">
+        <div class="loading-spinner"></div>
+        <div>LOADING GPK 3D EXPERIENCE...</div>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">GPK ULTRA 3D</div>
+    </div>
+    
+    <!-- AR Button (hidden until WebXR is supported) -->
+    <button class="ar-btn" id="ar-btn" style="display: none;">AR MODE</button>
+    
+    <!-- Damage Highlight Toggle -->
+    <div class="damage-toggle">
+        <input type="checkbox" id="damage-toggle">
+        <label for="damage-toggle">SHOW DAMAGE</label>
+    </div>
+    
+    <!-- Three.js Canvas -->
     <div id="canvas-container"></div>
     
-    <div class="mobile-controls">
+    <!-- Mobile Controls -->
+    <div class="controls">
         <button class="control-btn" id="rotate-btn">🔄</button>
         <button class="control-btn" id="zoom-in-btn">➕</button>
         <button class="control-btn" id="zoom-out-btn">➖</button>
         <button class="control-btn" id="flip-btn">🔄</button>
     </div>
 
+    <!-- Three.js and Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="mobile-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.11.4/dist/gsap.min.js"></script>
+    
+    <script>
+        // ==============================================
+        // NOTE: CONFIGURATION - EDIT THESE VALUES
+        // ==============================================
+        const CONFIG = {
+            // Path to your 3D card model (GLB format recommended)
+            modelPath: 'assets/models/gpk-card.glb', // <-- REPLACE WITH YOUR MODEL PATH
+            
+            // Initial card scale (adjust based on your model size)
+            cardScale: 0.8,
+            
+            // Damage overlay texture (red highlights)
+            damageTexturePath: 'assets/textures/damage-map.png', // <-- REPLACE WITH DAMAGE MAP PATH
+            
+            // Holographic effect texture (optional)
+            hologramTexturePath: 'assets/textures/hologram.png', // <-- REPLACE WITH HOLOGRAM PATH
+            
+            // Card back texture (shown when flipped)
+            backTexturePath: 'assets/textures/card-back.png' // <-- REPLACE WITH BACK TEXTURE PATH
+        };
+        
+        // ==============================================
+        // MAIN APPLICATION
+        // ==============================================
+        let scene, camera, renderer, card, damageOverlay;
+        let isDragging = false;
+        let previousTouch = { x: 0, y: 0 };
+        let currentZoom = 1;
+        let showDamage = false;
+        
+        // Initialize the 3D viewer
+        async function init() {
+            // Check for WebXR support
+            if ('xr' in navigator) {
+                document.getElementById('ar-btn').style.display = 'block';
+            }
+            
+            // Setup Three.js scene
+            setupScene();
+            
+            // Load the 3D card
+            await loadCard();
+            
+            // Setup damage overlay system
+            setupDamageSystem();
+            
+            // Setup event listeners
+            setupEventListeners();
+            
+            // Hide loading screen
+            document.getElementById('loading-screen').style.opacity = 0;
+            setTimeout(() => {
+                document.getElementById('loading-screen').style.display = 'none';
+            }, 500);
+            
+            // Start animation loop
+            animate();
+        }
+        
+        function setupScene() {
+            // Create scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x121212);
+            
+            // Setup camera (closer for mobile)
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+            camera.position.z = 3;
+            
+            // Create renderer
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                powerPreference: "high-performance"
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            
+            // Add lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 2);
+            scene.add(directionalLight);
+        }
+        
+        async function loadCard() {
+            return new Promise((resolve, reject) => {
+                const loader = new THREE.GLTFLoader();
+                
+                // NOTE: This loads your 3D model - ensure path is correct
+                loader.load(
+                    CONFIG.modelPath,
+                    (gltf) => {
+                        card = gltf.scene;
+                        card.scale.set(CONFIG.cardScale, CONFIG.cardScale, CONFIG.cardScale);
+                        
+                        // NOTE: Adjust these positions if your model isn't centered
+                        card.position.set(0, 0, 0);
+                        card.rotation.set(0, 0, 0);
+                        
+                        scene.add(card);
+                        resolve();
+                    },
+                    undefined,
+                    (error) => {
+                        console.error('Error loading 3D card:', error);
+                        alert('Failed to load 3D card');
+                        reject(error);
+                    }
+                );
+            });
+        }
+        
+        function setupDamageSystem() {
+            // NOTE: This creates a red overlay for damaged areas
+            // You'll need to create a damage map texture where:
+            // - White = damaged areas
+            // - Black = undamaged areas
+            
+            const textureLoader = new THREE.TextureLoader();
+            textureLoader.load(
+                CONFIG.damageTexturePath,
+                (texture) => {
+                    const geometry = new THREE.PlaneGeometry(3, 4);
+                    const material = new THREE.MeshBasicMaterial({
+                        map: texture,
+                        transparent: true,
+                        opacity: 0,
+                        color: 0xff0000,
+                        blending: THREE.AdditiveBlending
+                    });
+                    
+                    damageOverlay = new THREE.Mesh(geometry, material);
+                    damageOverlay.visible = false;
+                    scene.add(damageOverlay);
+                },
+                undefined,
+                (error) => {
+                    console.warn('Could not load damage texture:', error);
+                }
+            );
+        }
+        
+        function setupEventListeners() {
+            const canvas = renderer.domElement;
+            
+            // Touch rotation controls
+            canvas.addEventListener('touchstart', (e) => {
+                isDragging = true;
+                previousTouch = {
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY
+                };
+                e.preventDefault();
+            }, { passive: false });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                if (!isDragging || !card) return;
+                
+                const deltaX = e.touches[0].clientX - previousTouch.x;
+                const deltaY = e.touches[0].clientY - previousTouch.y;
+                
+                card.rotation.y += deltaX * 0.01;
+                card.rotation.x += deltaY * 0.01;
+                
+                previousTouch = {
+                    x: e.touches[0].clientX,
+                    y: e.touches[0].clientY
+                };
+                e.preventDefault();
+            }, { passive: false });
+            
+            canvas.addEventListener('touchend', () => {
+                isDragging = false;
+            });
+            
+            // Control buttons
+            document.getElementById('rotate-btn').addEventListener('click', () => {
+                if (card) {
+                    gsap.to(card.rotation, { 
+                        y: card.rotation.y + Math.PI/2, 
+                        duration: 0.5,
+                        ease: "power2.out"
+                    });
+                }
+            });
+            
+            document.getElementById('zoom-in-btn').addEventListener('click', () => {
+                currentZoom = Math.min(currentZoom + 0.2, 3);
+                gsap.to(camera.position, { 
+                    z: 3 / currentZoom,
+                    duration: 0.3
+                });
+            });
+            
+            document.getElementById('zoom-out-btn').addEventListener('click', () => {
+                currentZoom = Math.max(currentZoom - 0.2, 0.5);
+                gsap.to(camera.position, { 
+                    z: 3 / currentZoom,
+                    duration: 0.3
+                });
+            });
+            
+            document.getElementById('flip-btn').addEventListener('click', () => {
+                if (card) {
+                    gsap.to(card.rotation, { 
+                        y: card.rotation.y + Math.PI, 
+                        duration: 0.7,
+                        ease: "back.out(1.2)"
+                    });
+                }
+            });
+            
+            // AR button
+            document.getElementById('ar-btn').addEventListener('click', async () => {
+                try {
+                    const xrSession = await navigator.xr.requestSession("immersive-ar");
+                    renderer.xr.enabled = true;
+                    renderer.setAnimationLoop(() => {
+                        renderer.render(scene, camera);
+                    });
+                } catch (error) {
+                    alert("AR not available: " + error.message);
+                }
+            });
+            
+            // Damage toggle
+            document.getElementById('damage-toggle').addEventListener('change', (e) => {
+                showDamage = e.target.checked;
+                if (damageOverlay) {
+                    damageOverlay.visible = showDamage;
+                    gsap.to(damageOverlay.material, {
+                        opacity: showDamage ? 0.7 : 0,
+                        duration: 0.3
+                    });
+                }
+            });
+            
+            // Window resize
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            // Add subtle hover effect
+            if (card && !isDragging) {
+                card.rotation.y += 0.002;
+                card.position.y = Math.sin(Date.now() * 0.001) * 0.05;
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Start the application when loaded
+        window.addEventListener('load', init);
+    </script>
 </body>
 </html>
