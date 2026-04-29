@@ -2,12 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>GPK Ultra 3D | Vintage Collection 1985</title>
-    
-    <!-- Preload critical resources -->
-    <link rel="preload" href="https://aframe.io/releases/1.5.0/aframe.min.js" as="script">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" as="style">
     
     <!-- WebXR and PWA meta tags -->
     <meta name="theme-color" content="#1a1a1a">
@@ -19,467 +15,296 @@
     <!-- A-Frame Core -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     
-    <!-- A-Frame Components -->
-    <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-layout-component@5.3.0/dist/aframe-layout-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
-    
     <style>
-        :root {
-            --gpk-red: #ff3e41;
-            --gpk-yellow: #ffde37;
-            --gpk-blue: #2e86ab;
-            --gpk-black: #1a1a1a;
-            --gpk-paper: #f5f5f0;
-        }
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body {
-            font-family: 'Bangers', 'Comic Sans MS', cursive, sans-serif;
-            background-color: var(--gpk-black);
-            color: white;
+            background: #000;
             overflow: hidden;
+            position: fixed;
             width: 100vw;
             height: 100vh;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
+            font-family: 'Bangers', cursive, sans-serif;
         }
 
-        /* Loading Screen */
         #loading-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            background: #000;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            transition: opacity 0.8s ease-out;
+            transition: opacity 0.5s ease;
         }
         
         .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255,255,255,0.1);
             border-radius: 50%;
-            border-top-color: var(--gpk-yellow);
-            border-right-color: var(--gpk-red);
-            animation: spin 1.2s linear infinite;
-            margin-bottom: 1rem;
+            border-top-color: #ffde37;
+            animation: spin 1s linear infinite;
         }
         
         .loading-text {
-            font-size: 1.5rem;
-            text-align: center;
-            text-shadow: 0 0 15px var(--gpk-yellow);
-            letter-spacing: 3px;
-        }
-
-        /* Navigation Bar */
-        .nav-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: rgba(26, 26, 26, 0.95);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 15px 20px;
-            z-index: 1000;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--gpk-yellow);
-        }
-        
-        .nav-bar h1 {
-            color: var(--gpk-yellow);
-            font-size: clamp(1.2rem, 3vw, 1.8rem);
-            text-shadow: 2px 2px 0 var(--gpk-red);
-            letter-spacing: 1px;
-        }
-        
-        .nav-controls {
-            display: flex;
-            gap: 10px;
-        }
-        
-        .nav-btn {
-            background: rgba(255, 255, 255, 0.1);
-            border: 2px solid var(--gpk-yellow);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-family: 'Bangers', cursive;
+            color: #ffde37;
+            margin-top: 1rem;
             font-size: 1rem;
-            transition: all 0.2s ease;
-        }
-        
-        .nav-btn:hover {
-            background: var(--gpk-yellow);
-            color: var(--gpk-black);
+            letter-spacing: 2px;
         }
 
-        /* Card Info Panel */
-        .card-info {
+        /* Proximity indicator for card interaction */
+        #proximity-indicator {
             position: fixed;
-            bottom: 30px;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(26, 26, 26, 0.95);
-            padding: 20px 35px;
+            background: rgba(0,0,0,0.8);
+            border: 2px solid #ffde37;
+            color: #ffde37;
+            padding: 10px 20px;
             border-radius: 20px;
-            border: 3px solid var(--gpk-yellow);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
             z-index: 1000;
             display: none;
+            text-align: center;
+            font-size: 0.9rem;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            max-width: 90vw;
-            text-align: center;
         }
         
-        .card-info.active {
+        #proximity-indicator.active {
             display: block;
-            animation: slideUp 0.3s ease;
-        }
-        
-        .card-info h3 {
-            color: var(--gpk-yellow);
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .card-info .card-stats {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 1rem;
-        }
-        
-        .stat {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 5px 15px;
-            border-radius: 10px;
-        }
-        
-        .stat-label {
-            color: var(--gpk-yellow);
-            font-size: 0.8rem;
-        }
-        
-        .stat-value {
-            color: white;
-            font-size: 1.2rem;
+            animation: pulse 2s infinite;
         }
 
-        /* Search Bar */
-        .search-container {
+        /* Back button - only visible when looking down */
+        #back-hint {
             position: fixed;
-            top: 100px;
+            top: 20px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 999;
-            width: 90%;
-            max-width: 400px;
-        }
-        
-        .search-input {
-            width: 100%;
-            padding: 12px 20px;
-            border-radius: 25px;
-            border: 2px solid var(--gpk-yellow);
-            background: rgba(26, 26, 26, 0.9);
-            color: white;
-            font-family: 'Bangers', cursive;
-            font-size: 1rem;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-        }
-        
-        .search-input:focus {
-            outline: none;
-            border-color: var(--gpk-red);
+            color: rgba(255,255,255,0.5);
+            z-index: 1000;
+            font-size: 0.8rem;
+            pointer-events: none;
         }
 
-        /* Filter Buttons */
-        .filter-controls {
-            position: fixed;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 999;
-        }
-        
-        .filter-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(26, 26, 26, 0.9);
-            border: 2px solid var(--gpk-yellow);
-            color: white;
-            cursor: pointer;
-            font-size: 1.2rem;
-            transition: all 0.2s ease;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-        }
-        
-        .filter-btn.active {
-            background: var(--gpk-yellow);
-            color: var(--gpk-black);
-        }
-
-        /* Animations */
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
         
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-        
         @keyframes pulse {
-            0%, 100% { opacity: 0.8; }
+            0%, 100% { opacity: 0.6; }
             50% { opacity: 1; }
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .nav-bar {
-                padding: 10px 15px;
-            }
-            
-            .filter-controls {
-                left: 10px;
-                gap: 8px;
-            }
-            
-            .filter-btn {
-                width: 35px;
-                height: 35px;
-                font-size: 1rem;
-            }
-            
-            .card-info {
-                padding: 15px 25px;
-                bottom: 20px;
-            }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Loading Screen -->
     <div id="loading-screen">
         <div class="loading-spinner"></div>
-        <div class="loading-text">LOADING VINTAGE COLLECTION...</div>
+        <div class="loading-text">VINTAGE COLLECTION</div>
     </div>
 
-    <!-- Navigation Bar -->
-    <div class="nav-bar">
-        <h1>🏆 1985 VINTAGE COLLECTION</h1>
-        <div class="nav-controls">
-            <button class="nav-btn" onclick="history.back()">← BACK</button>
-            <button class="nav-btn" id="vr-btn">👓 VR</button>
-            <button class="nav-btn" id="grid-view-btn">⊞ GRID</button>
-            <button class="nav-btn" id="carousel-view-btn">↻ CAROUSEL</button>
-        </div>
+    <div id="proximity-indicator">
+        <span id="proximity-text"></span>
     </div>
 
-    <!-- Search Bar -->
-    <div class="search-container">
-        <input type="text" class="search-input" placeholder="🔍 Search cards by name or number..." id="search-input">
-    </div>
+    <div id="back-hint">👆 Look down for back button</div>
 
-    <!-- Filter Controls -->
-    <div class="filter-controls">
-        <button class="filter-btn active" title="All Cards" data-filter="all">★</button>
-        <button class="filter-btn" title="Common" data-filter="common" style="border-color: #aaa;">C</button>
-        <button class="filter-btn" title="Rare" data-filter="rare" style="border-color: var(--gpk-blue);">R</button>
-        <button class="filter-btn" title="Ultra Rare" data-filter="ultra-rare" style="border-color: var(--gpk-red);">UR</button>
-        <button class="filter-btn" title="Legendary" data-filter="legendary" style="border-color: var(--gpk-yellow);">L</button>
-    </div>
-
-    <!-- Card Info Panel -->
-    <div id="card-info" class="card-info">
-        <h3 id="card-name">CARD NAME</h3>
-        <p id="card-description">Card Description</p>
-        <div class="card-stats">
-            <div class="stat">
-                <div class="stat-label">RARITY</div>
-                <div class="stat-value" id="card-rarity">Common</div>
-            </div>
-            <div class="stat">
-                <div class="stat-label">SERIES</div>
-                <div class="stat-value">OS1</div>
-            </div>
-            <div class="stat">
-                <div class="stat-label">NUMBER</div>
-                <div class="stat-value" id="card-number">#1</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- A-Frame Scene -->
+    <!-- A-Frame Scene - Mobile Walking Experience -->
     <a-scene 
-        renderer="colorManagement: true; antialias: true; precision: medium; exposure: 1.2"
+        renderer="colorManagement: true; antialias: false; precision: low; alpha: false"
         background="color: #1a1a1a"
         vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: true"
+        embedded
     >
-        <!-- Environment -->
-        <a-entity geometry="primitive: box; width: 30; height: 10; depth: 30"
-                 material="shader: standard; color: #2a2a2a; metalness: 0.1; roughness: 0.8; side: back"
-                 position="0 5 0">
+        <!-- Vintage Collection Room -->
+        <a-entity geometry="primitive: box; width: 20; height: 5; depth: 20"
+                 material="shader: standard; color: #2a2a2a; side: back"
+                 position="0 2.5 0">
         </a-entity>
         
-        <!-- Floor -->
-        <a-entity geometry="primitive: plane; width: 30; height: 30"
+        <!-- Floor with markers -->
+        <a-entity geometry="primitive: plane; width: 20; height: 20"
                  rotation="-90 0 0"
-                 material="shader: standard; color: #1a1a1a; metalness: 0.2; roughness: 0.6">
+                 position="0 0 0"
+                 material="shader: standard; color: #1a1a1a; metalness: 0.1; roughness: 0.6">
+        </a-entity>
+
+        <!-- Navigation grid on floor -->
+        <a-entity position="0 0.01 0">
+            <a-entity geometry="primitive: plane; width: 20; height: 0.03"
+                     rotation="-90 0 0"
+                     position="0 0.01 -3"
+                     material="shader: standard; color: #333; emissive: #333; emissiveIntensity: 0.3">
+            </a-entity>
+            <a-entity geometry="primitive: plane; width: 20; height: 0.03"
+                     rotation="-90 0 0"
+                     position="0 0.01 0"
+                     material="shader: standard; color: #333; emissive: #333; emissiveIntensity: 0.3">
+            </a-entity>
+            <a-entity geometry="primitive: plane; width: 20; height: 0.03"
+                     rotation="-90 0 0"
+                     position="0 0.01 3"
+                     material="shader: standard; color: #333; emissive: #333; emissiveIntensity: 0.3">
+            </a-entity>
         </a-entity>
         
-        <!-- Lighting -->
-        <a-entity light="type: ambient; color: #666; intensity: 0.4"></a-entity>
-        <a-entity light="type: directional; color: #FFDE37; intensity: 0.8; castShadow: true" position="-5 8 5"></a-entity>
-        <a-entity light="type: directional; color: #FF3E41; intensity: 0.5" position="5 6 -3"></a-entity>
-        <a-entity light="type: point; color: #ffde37; intensity: 2; distance: 15; decay: 2" position="0 3 0"></a-entity>
+        <!-- Warm vintage lighting -->
+        <a-entity light="type: ambient; color: #886644; intensity: 0.6"></a-entity>
+        <a-entity light="type: directional; color: #FFDE37; intensity: 0.8" position="-3 5 0"></a-entity>
+        <a-entity light="type: directional; color: #ff9966; intensity: 0.5" position="3 4 -2"></a-entity>
+        <a-entity light="type: point; color: #ffde37; intensity: 1.5; distance: 15" position="0 3 -3"></a-entity>
         
-        <!-- Camera Rig -->
-        <a-entity id="camera-rig" position="0 1.6 5" 
-                  movement-controls="speed: 0.2; fly: false">
-            <a-entity camera="active: true; fov: 80; near: 0.1; far: 100"
-                     look-controls="pointerLockEnabled: true; touchEnabled: true"
-                     wasd-controls="acceleration: 50; fly: false">
-                <a-entity cursor="fuse: false"
-                         position="0 0 -1.5"
-                         geometry="primitive: ring; radiusInner: 0.015; radiusOuter: 0.025"
-                         material="color: #FFDE37; shader: flat">
+        <!-- Mobile Camera - Device orientation only -->
+        <a-entity camera="active: true; fov: 70; near: 0.1; far: 50"
+                 look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false"
+                 position="0 1.6 4"
+                 id="mobile-camera">
+            <!-- Gaze cursor -->
+            <a-entity cursor="fuse: true; fuseTimeout: 1000"
+                     position="0 0 -1"
+                     geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
+                     material="color: #FFDE37; shader: flat; opacity: 0.8">
+            </a-entity>
+        </a-entity>
+        
+        <!-- Back to Hub Zone - Floor portal to return -->
+        <a-entity id="back-portal" 
+                 position="0 0.02 5"
+                 geometry="primitive: circle; radius: 0.5"
+                 rotation="-90 0 0"
+                 material="shader: standard; color: #ff3e41; emissive: #ff3e41; emissiveIntensity: 0.8; transparent: true; opacity: 0.7">
+            <a-entity geometry="primitive: ring; radiusInner: 0.4; radiusOuter: 0.55"
+                     rotation="0 0 0"
+                     position="0 0.01 0"
+                     material="shader: standard; color: #FFDE37; emissive: #FFDE37; emissiveIntensity: 1; transparent: true; opacity: 0.9">
+            </a-entity>
+            <a-text value="← BACK TO HUB" position="0 0.6 0" color="#ffde37" align="center" width="2"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+            </a-text>
+        </a-entity>
+        
+        <!-- Card Gallery Wall 1 - Left Side -->
+        <a-entity position="-8 2.5 -2" rotation="0 90 0">
+            
+            <!-- Card 1: Adam Bomb (Legendary) -->
+            <a-entity class="card-display" card-id="1" card-name="Adam Bomb" card-rarity="legendary"
+                     position="-3 0 0"
+                     geometry="primitive: box; width: 1.2; height: 1.7; depth: 0.1"
+                     material="shader: standard; color: #ffde37; emissive: #ffde37; emissiveIntensity: 0.3; metalness: 0.2; roughness: 0.5; transparent: true; opacity: 0.95">
+                <a-text value="ADAM BOMB\n#1 Legendary" position="0 1 0.06" color="#FFDE37" align="center" width="1.5"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.8 0.8 0.8"></a-text>
+                <a-entity class="proximity-glow" geometry="primitive: box; width: 2; height: 2.5; depth: 0.2"
+                         position="0 0 -0.1"
+                         material="shader: standard; color: #FFDE37; transparent: true; opacity: 0.05; emissive: #FFDE37; emissiveIntensity: 0.1">
+                </a-entity>
+            </a-entity>
+            
+            <!-- Card 2: Blasted Billy (Rare) -->
+            <a-entity class="card-display" card-id="2" card-name="Blasted Billy" card-rarity="rare"
+                     position="0 0 0"
+                     geometry="primitive: box; width: 1.2; height: 1.7; depth: 0.1"
+                     material="shader: standard; color: #2e86ab; emissive: #2e86ab; emissiveIntensity: 0.2; metalness: 0.2; roughness: 0.5; transparent: true; opacity: 0.95">
+                <a-text value="BLASTED BILLY\n#2 Rare" position="0 1 0.06" color="#FFFFFF" align="center" width="1.5"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.8 0.8 0.8"></a-text>
+                <a-entity class="proximity-glow" geometry="primitive: box; width: 2; height: 2.5; depth: 0.2"
+                         position="0 0 -0.1"
+                         material="shader: standard; color: #2e86ab; transparent: true; opacity: 0.05; emissive: #2e86ab; emissiveIntensity: 0.1">
+                </a-entity>
+            </a-entity>
+            
+            <!-- Card 3: Corroded Carl (Common) -->
+            <a-entity class="card-display" card-id="3" card-name="Corroded Carl" card-rarity="common"
+                     position="3 0 0"
+                     geometry="primitive: box; width: 1.2; height: 1.7; depth: 0.1"
+                     material="shader: standard; color: #4caf50; emissive: #4caf50; emissiveIntensity: 0.15; metalness: 0.2; roughness: 0.5; transparent: true; opacity: 0.95">
+                <a-text value="CORRODED CARL\n#3 Common" position="0 1 0.06" color="#FFFFFF" align="center" width="1.5"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.8 0.8 0.8"></a-text>
+                <a-entity class="proximity-glow" geometry="primitive: box; width: 2; height: 2.5; depth: 0.2"
+                         position="0 0 -0.1"
+                         material="shader: standard; color: #4caf50; transparent: true; opacity: 0.05; emissive: #4caf50; emissiveIntensity: 0.1">
                 </a-entity>
             </a-entity>
         </a-entity>
         
-        <!-- Card Gallery - Grid Layout (Default) -->
-        <a-entity id="card-gallery" layout="type: grid; margin: 1.5; columns: 5" position="0 1.8 -5">
+        <!-- Card Gallery Wall 2 - Right Side -->
+        <a-entity position="8 2.5 -2" rotation="0 -90 0">
             
-            <!-- Card 1: Adam Bomb -->
-            <a-entity class="card-item" card-id="1" card-name="Adam Bomb" card-rarity="legendary" card-series="OS1"
-                      geometry="primitive: plane; width: 1; height: 1.4"
-                      material="shader: standard; src: #card-adam-bomb; metalness: 0.1; roughness: 0.3"
-                      position="0 0 0"
-                      event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3; scale: 1.1 1.1 1.1"
-                      event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0; scale: 1 1 1">
-                <a-text value="Adam Bomb\n#1" position="0 -0.85 0.01" color="#FFDE37" align="center" width="2"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.7 0.7 0.7"></a-text>
-            </a-entity>
-            
-            <!-- Card 2: Blasted Billy -->
-            <a-entity class="card-item" card-id="2" card-name="Blasted Billy" card-rarity="rare" card-series="OS1"
-                      geometry="primitive: plane; width: 1; height: 1.4"
-                      material="shader: standard; src: #card-billy; metalness: 0.1; roughness: 0.3"
-                      position="0 0 0"
-                      event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3; scale: 1.1 1.1 1.1"
-                      event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0; scale: 1 1 1">
-                <a-text value="Blasted Billy\n#2" position="0 -0.85 0.01" color="#FFFFFF" align="center" width="2"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.7 0.7 0.7"></a-text>
+            <!-- Card 4: Deadly Daphne (Ultra Rare) -->
+            <a-entity class="card-display" card-id="4" card-name="Deadly Daphne" card-rarity="ultra-rare"
+                     position="-3 0 0"
+                     geometry="primitive: box; width: 1.2; height: 1.7; depth: 0.1"
+                     material="shader: standard; color: #ff3e41; emissive: #ff3e41; emissiveIntensity: 0.3; metalness: 0.2; roughness: 0.5; transparent: true; opacity: 0.95">
+                <a-text value="DEADLY DAPHNE\n#4 Ultra Rare" position="0 1 0.06" color="#FF3E41" align="center" width="1.5"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.8 0.8 0.8"></a-text>
+                <a-entity class="proximity-glow" geometry="primitive: box; width: 2; height: 2.5; depth: 0.2"
+                         position="0 0 -0.1"
+                         material="shader: standard; color: #ff3e41; transparent: true; opacity: 0.05; emissive: #ff3e41; emissiveIntensity: 0.1">
+                </a-entity>
             </a-entity>
             
-            <!-- Card 3: Corroded Carl -->
-            <a-entity class="card-item" card-id="3" card-name="Corroded Carl" card-rarity="common" card-series="OS1"
-                      geometry="primitive: plane; width: 1; height: 1.4"
-                      material="shader: standard; src: #card-carl; metalness: 0.1; roughness: 0.3"
-                      position="0 0 0"
-                      event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3; scale: 1.1 1.1 1.1"
-                      event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0; scale: 1 1 1">
-                <a-text value="Corroded Carl\n#3" position="0 -0.85 0.01" color="#FFFFFF" align="center" width="2"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.7 0.7 0.7"></a-text>
+            <!-- Card 5: Electric Eric (Common) -->
+            <a-entity class="card-display" card-id="5" card-name="Electric Eric" card-rarity="common"
+                     position="0 0 0"
+                     geometry="primitive: box; width: 1.2; height: 1.7; depth: 0.1"
+                     material="shader: standard; color: #ffde37; emissive: #ffde37; emissiveIntensity: 0.15; metalness: 0.2; roughness: 0.5; transparent: true; opacity: 0.95">
+                <a-text value="ELECTRIC ERIC\n#5 Common" position="0 1 0.06" color="#FFFFFF" align="center" width="1.5"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.8 0.8 0.8"></a-text>
+                <a-entity class="proximity-glow" geometry="primitive: box; width: 2; height: 2.5; depth: 0.2"
+                         position="0 0 -0.1"
+                         material="shader: standard; color: #ffde37; transparent: true; opacity: 0.05; emissive: #ffde37; emissiveIntensity: 0.1">
+                </a-entity>
             </a-entity>
             
-            <!-- Card 4: Deadly Daphne -->
-            <a-entity class="card-item" card-id="4" card-name="Deadly Daphne" card-rarity="ultra-rare" card-series="OS1"
-                      geometry="primitive: plane; width: 1; height: 1.4"
-                      material="shader: standard; src: #card-daphne; metalness: 0.1; roughness: 0.3"
-                      position="0 0 0"
-                      event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3; scale: 1.1 1.1 1.1"
-                      event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0; scale: 1 1 1">
-                <a-text value="Deadly Daphne\n#4" position="0 -0.85 0.01" color="#FF3E41" align="center" width="2"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.7 0.7 0.7"></a-text>
-            </a-entity>
-            
-            <!-- Card 5: Electric Eric -->
-            <a-entity class="card-item" card-id="5" card-name="Electric Eric" card-rarity="common" card-series="OS1"
-                      geometry="primitive: plane; width: 1; height: 1.4"
-                      material="shader: standard; src: #card-eric; metalness: 0.1; roughness: 0.3"
-                      position="0 0 0"
-                      event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3; scale: 1.1 1.1 1.1"
-                      event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0; scale: 1 1 1">
-                <a-text value="Electric Eric\n#5" position="0 -0.85 0.01" color="#FFFFFF" align="center" width="2"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.7 0.7 0.7"></a-text>
-            </a-entity>
-            
-            <!-- More cards would be added here using a template system -->
-            <!-- Template-based cards would be generated by JavaScript -->
-        </a-entity>
-        
-        <!-- Card Carousel View (Hidden by default) -->
-        <a-entity id="card-carousel" position="0 1.6 -3" visible="false">
-            <a-entity class="carousel-card" position="-3 0 0" rotation="0 45 0">
-                <a-plane width="1.5" height="2.1" material="shader: standard; src: #card-adam-bomb; metalness: 0.1; roughness: 0.3"></a-plane>
-                <a-text value="Adam Bomb #1" position="0 -1.2 0.01" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
-            </a-entity>
-            <a-entity class="carousel-card" position="0 0.2 0">
-                <a-plane width="1.8" height="2.5" material="shader: standard; src: #card-billy; metalness: 0.1; roughness: 0.3"></a-plane>
-                <a-text value="Blasted Billy #2" position="0 -1.4 0.01" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
-            </a-entity>
-            <a-entity class="carousel-card" position="3 0 0" rotation="0 -45 0">
-                <a-plane width="1.5" height="2.1" material="shader: standard; src: #card-carl; metalness: 0.1; roughness: 0.3"></a-plane>
-                <a-text value="Corroded Carl #3" position="0 -1.2 0.01" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+            <!-- Card 6: Future Card Slot -->
+            <a-entity class="card-display" card-id="6" card-name="Coming Soon" card-rarity="unknown"
+                     position="3 0 0"
+                     geometry="primitive: box; width: 1.2; height: 1.7; depth: 0.1"
+                     material="shader: standard; color: #666; metalness: 0.2; roughness: 0.5; transparent: true; opacity: 0.7">
+                <a-text value="MORE COMING\nSOON" position="0 1 0.06" color="#999" align="center" width="1.5"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.8 0.8 0.8"></a-text>
             </a-entity>
         </a-entity>
         
-        <!-- Assets -->
+        <!-- Back Wall - Card Details Display -->
+        <a-entity position="0 2.5 -9">
+            <a-text value="VINTAGE COLLECTION" position="0 1.5 0.1" color="#FFDE37" align="center" width="5"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="1.2 1.2 1.2"></a-text>
+            <a-text value="1985 Original Series" position="0 0.5 0.1" color="#FFFFFF" align="center" width="4"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.8 0.8 0.8"></a-text>
+            <a-text value="Walk up to cards to view details" position="0 -1 0.1" color="#999" align="center" width="4"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.7 0.7 0.7"></a-text>
+        </a-entity>
+        
+        <!-- Card Detail Display (appears when close to a card) -->
+        <a-entity id="card-detail-display" position="0 2 -3" visible="false">
+            <a-entity geometry="primitive: plane; width: 3; height: 2"
+                     material="shader: standard; color: #1a1a1a; metalness: 0.3; roughness: 0.5; transparent: true; opacity: 0.95"
+                     position="0 0 0">
+            </a-entity>
+            <a-text id="detail-card-name" value="" position="0 0.6 0.01" color="#FFDE37" align="center" width="3"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.9 0.9 0.9"></a-text>
+            <a-text id="detail-card-info" value="" position="0 0 0.01" color="#FFFFFF" align="center" width="2.8"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.7 0.7 0.7"></a-text>
+            <a-text id="detail-card-artist" value="" position="0 -0.5 0.01" color="#999" align="center" width="2.8"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" scale="0.6 0.6 0.6"></a-text>
+        </a-entity>
+        
+        <!-- Audio -->
         <a-assets timeout="30000">
-            <!-- Card Images with Fallbacks -->
-            <img id="card-adam-bomb" src="https://i.imgur.com/YNQmzXA.jpg" 
-                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22420%22%3E%3Crect width=%22300%22 height=%22420%22 fill=%22%23ff3e41%22/%3E%3Ctext x=%22150%22 y=%22210%22 fill=%22%23fff%22 text-anchor=%22middle%22 font-size=%2224%22%3EAdam Bomb%3C/text%3E%3C/svg%3E'">
-            
-            <img id="card-billy" src="https://i.imgur.com/placeholder-billy.jpg"
-                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22420%22%3E%3Crect width=%22300%22 height=%22420%22 fill=%22%232e86ab%22/%3E%3Ctext x=%22150%22 y=%22210%22 fill=%22%23fff%22 text-anchor=%22middle%22 font-size=%2224%22%3EBlasted Billy%3C/text%3E%3C/svg%3E'">
-            
-            <img id="card-carl" src="https://i.imgur.com/placeholder-carl.jpg"
-                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22420%22%3E%3Crect width=%22300%22 height=%22420%22 fill=%22%234caf50%22/%3E%3Ctext x=%22150%22 y=%22210%22 fill=%22%23fff%22 text-anchor=%22middle%22 font-size=%2224%22%3ECorroded Carl%3C/text%3E%3C/svg%3E'">
-            
-            <img id="card-daphne" src="https://i.imgur.com/placeholder-daphne.jpg"
-                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22420%22%3E%3Crect width=%22300%22 height=%22420%22 fill=%22%23ff3e41%22/%3E%3Ctext x=%22150%22 y=%22210%22 fill=%22%23fff%22 text-anchor=%22middle%22 font-size=%2224%22%3EDeadly Daphne%3C/text%3E%3C/svg%3E'">
-            
-            <img id="card-eric" src="https://i.imgur.com/placeholder-eric.jpg"
-                 onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22300%22 height=%22420%22%3E%3Crect width=%22300%22 height=%22420%22 fill=%22%23ffde37%22/%3E%3Ctext x=%22150%22 y=%22210%22 fill=%22%23000%22 text-anchor=%22middle%22 font-size=%2224%22%3EElectric Eric%3C/text%3E%3C/svg%3E'">
-            
-            <!-- Audio -->
             <audio id="click-sound" src="https://cdn.aframe.io/basic-guide/audio/click.ogg"></audio>
             <audio id="hover-sound" src="https://cdn.aframe.io/basic-guide/audio/hover.ogg"></audio>
         </a-assets>
@@ -489,277 +314,263 @@
         (function() {
             'use strict';
             
-            // DOM Elements
             const loadingScreen = document.getElementById('loading-screen');
-            const cardInfo = document.getElementById('card-info');
-            const cardName = document.getElementById('card-name');
-            const cardDescription = document.getElementById('card-description');
-            const cardRarity = document.getElementById('card-rarity');
-            const cardNumber = document.getElementById('card-number');
-            const searchInput = document.getElementById('search-input');
+            const proximityIndicator = document.getElementById('proximity-indicator');
+            const proximityText = document.getElementById('proximity-text');
             const scene = document.querySelector('a-scene');
+            const camera = document.getElementById('mobile-camera');
+            const backHint = document.getElementById('back-hint');
             
-            // State
-            let currentView = 'grid';
-            let currentFilter = 'all';
-            
-            // Card Database (extendable)
+            // Card database
             const cardDatabase = {
                 1: {
                     name: "Adam Bomb",
                     number: "#1",
                     rarity: "Legendary",
                     series: "OS1",
-                    description: "The most iconic GPK card. Adam's head explodes with nuclear energy!",
-                    artist: "John Pound",
-                    release: "1985"
+                    description: "The most iconic GPK card. Nuclear explosion!",
+                    artist: "John Pound, 1985"
                 },
                 2: {
                     name: "Blasted Billy",
                     number: "#2",
                     rarity: "Rare",
                     series: "OS1",
-                    description: "Billy's body is completely blown apart by a mysterious explosion.",
-                    artist: "John Pound",
-                    release: "1985"
+                    description: "Blown apart by mysterious explosion.",
+                    artist: "John Pound, 1985"
                 },
                 3: {
                     name: "Corroded Carl",
                     number: "#3",
                     rarity: "Common",
                     series: "OS1",
-                    description: "Carl's skin melts away revealing his skeleton beneath.",
-                    artist: "Tom Bunk",
-                    release: "1985"
+                    description: "Skin melts to reveal skeleton.",
+                    artist: "Tom Bunk, 1985"
                 },
                 4: {
                     name: "Deadly Daphne",
                     number: "#4",
                     rarity: "Ultra Rare",
                     series: "OS1",
-                    description: "Daphne's deadly kiss can melt anything in her path.",
-                    artist: "John Pound",
-                    release: "1985"
+                    description: "Her deadly kiss melts everything.",
+                    artist: "John Pound, 1985"
                 },
                 5: {
                     name: "Electric Eric",
                     number: "#5",
                     rarity: "Common",
                     series: "OS1",
-                    description: "Eric's shocking personality is literally electrifying!",
-                    artist: "Tom Bunk",
-                    release: "1985"
+                    description: "Shockingly electrifying personality!",
+                    artist: "Tom Bunk, 1985"
                 }
             };
             
+            // State
+            let currentCard = null;
+            let isViewingDetail = false;
+            let proximityTimeout = null;
+            
             // Initialize
             function init() {
-                setupCardInteractions();
-                setupViewToggle();
-                setupFilterSystem();
-                setupSearchSystem();
-                setupVRButton();
+                setupProximityDetection();
+                setupGazeInteraction();
+                setupBackPortal();
                 hideLoadingScreen();
+                hideBackHint();
             }
             
-            // Hide loading screen
-            function hideLoadingScreen() {
-                setTimeout(() => {
-                    loadingScreen.style.opacity = '0';
-                    setTimeout(() => {
-                        loadingScreen.style.display = 'none';
-                    }, 800);
-                }, 2000);
-            }
-            
-            // Card Interactions
-            function setupCardInteractions() {
-                const cards = document.querySelectorAll('.card-item');
+            // Proximity detection for cards
+            function setupProximityDetection() {
+                const cards = document.querySelectorAll('.card-display');
+                const PROXIMITY_THRESHOLD = 3;
+                const INTERACTION_THRESHOLD = 1.5;
                 
-                cards.forEach(card => {
-                    // Mouse enter
-                    card.addEventListener('mouseenter', () => {
-                        const cardId = card.getAttribute('card-id');
-                        const cardData = cardDatabase[cardId];
+                function checkProximity() {
+                    const cameraPos = camera.getAttribute('position');
+                    let closestCard = null;
+                    let closestDistance = Infinity;
+                    
+                    cards.forEach(card => {
+                        const cardPos = card.getAttribute('position');
+                        // Get world position considering parent
+                        const worldPos = getWorldPosition(card);
+                        const distance = calculateDistance(cameraPos, worldPos);
                         
-                        if (cardData) {
-                            cardName.textContent = cardData.name;
-                            cardDescription.textContent = cardData.description;
-                            cardRarity.textContent = cardData.rarity;
-                            cardNumber.textContent = cardData.number;
-                            cardInfo.classList.add('active');
+                        // Update glow
+                        const glowElements = card.querySelectorAll('.proximity-glow');
+                        glowElements.forEach(glow => {
+                            if (distance < PROXIMITY_THRESHOLD) {
+                                const opacity = Math.max(0.02, 0.15 - (distance / PROXIMITY_THRESHOLD) * 0.15);
+                                glow.setAttribute('material', 'opacity', opacity);
+                                glow.setAttribute('material', 'emissiveIntensity', opacity * 2);
+                            } else {
+                                glow.setAttribute('material', 'opacity', 0.05);
+                                glow.setAttribute('material', 'emissiveIntensity', 0.1);
+                            }
+                        });
+                        
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closestCard = card;
                         }
+                    });
+                    
+                    // Update proximity indicator
+                    if (closestDistance < INTERACTION_THRESHOLD && closestCard) {
+                        const cardName = closestCard.getAttribute('card-name');
+                        const cardRarity = closestCard.getAttribute('card-rarity');
                         
-                        // Play hover sound
-                        playSound('hover-sound', 0.2);
-                    });
+                        if (!isViewingDetail || currentCard !== closestCard) {
+                            proximityText.textContent = `${cardName} - ${cardRarity} - Stare to view`;
+                            proximityIndicator.classList.add('active');
+                            currentCard = closestCard;
+                        }
+                    } else if (closestDistance < PROXIMITY_THRESHOLD && closestCard) {
+                        const cardName = closestCard.getAttribute('card-name');
+                        proximityText.textContent = `${cardName} - Walk closer`;
+                        proximityIndicator.classList.add('active');
+                        currentCard = null;
+                        hideCardDetail();
+                    } else {
+                        proximityIndicator.classList.remove('active');
+                        currentCard = null;
+                        hideCardDetail();
+                    }
                     
-                    // Mouse leave
-                    card.addEventListener('mouseleave', () => {
-                        cardInfo.classList.remove('active');
-                    });
-                    
-                    // Click to focus on card
-                    card.addEventListener('click', () => {
-                        focusOnCard(card);
-                    });
-                });
+                    // Check back portal proximity
+                    checkBackPortalProximity(cameraPos);
+                }
+                
+                setInterval(checkProximity, 200);
             }
             
-            // Focus on specific card
-            function focusOnCard(card) {
-                const position = card.getAttribute('position');
-                const cameraRig = document.getElementById('camera-rig');
+            // Check back portal proximity
+            function checkBackPortalProximity(cameraPos) {
+                const portal = document.getElementById('back-portal');
+                if (!portal) return;
                 
-                // Smooth camera movement to card
-                cameraRig.setAttribute('animation__move', {
-                    property: 'position',
-                    to: `${position.x} ${position.y + 0.5} ${position.z + 2}`,
-                    dur: 1000,
-                    easing: 'easeInOutQuad'
-                });
+                const portalPos = portal.getAttribute('position');
+                const distance = calculateDistance(
+                    {x: cameraPos.x, y: 0, z: cameraPos.z},
+                    {x: portalPos.x, y: 0, z: portalPos.z}
+                );
                 
-                // Play click sound
-                playSound('click-sound', 0.4);
-                
-                // Show enhanced card info
-                const cardId = card.getAttribute('card-id');
-                const cardData = cardDatabase[cardId];
-                
-                if (cardData) {
-                    cardName.textContent = cardData.name;
-                    cardDescription.textContent = `${cardData.description}\nArtist: ${cardData.artist} | Released: ${cardData.release}`;
-                    cardRarity.textContent = cardData.rarity;
-                    cardNumber.textContent = cardData.number;
-                    cardInfo.classList.add('active');
+                if (distance < 1.5) {
+                    proximityText.textContent = 'Return to main hub - Stare to go back';
+                    proximityIndicator.classList.add('active');
                     
-                    // Auto-hide after 5 seconds
-                    setTimeout(() => {
-                        cardInfo.classList.remove('active');
-                    }, 5000);
+                    // Gaze to activate
+                    portal.addEventListener('click', () => {
+                        window.location.href = 'index.html';
+                    });
                 }
             }
             
-            // View Toggle (Grid/Carousel)
-            function setupViewToggle() {
-                const gridBtn = document.getElementById('grid-view-btn');
-                const carouselBtn = document.getElementById('carousel-view-btn');
-                const gallery = document.getElementById('card-gallery');
-                const carousel = document.getElementById('card-carousel');
+            // Gaze interaction for cards
+            function setupGazeInteraction() {
+                const cards = document.querySelectorAll('.card-display');
                 
-                gridBtn.addEventListener('click', () => {
-                    currentView = 'grid';
-                    gallery.setAttribute('visible', 'true');
-                    carousel.setAttribute('visible', 'false');
-                    gridBtn.style.background = 'var(--gpk-yellow)';
-                    gridBtn.style.color = 'var(--gpk-black)';
-                    carouselBtn.style.background = 'rgba(255, 255, 255, 0.1)';
-                    carouselBtn.style.color = 'white';
-                });
-                
-                carouselBtn.addEventListener('click', () => {
-                    currentView = 'carousel';
-                    gallery.setAttribute('visible', 'false');
-                    carousel.setAttribute('visible', 'true');
-                    carouselBtn.style.background = 'var(--gpk-yellow)';
-                    carouselBtn.style.color = 'var(--gpk-black)';
-                    gridBtn.style.background = 'rgba(255, 255, 255, 0.1)';
-                    gridBtn.style.color = 'white';
-                });
-            }
-            
-            // Filter System
-            function setupFilterSystem() {
-                const filterBtns = document.querySelectorAll('.filter-btn');
-                
-                filterBtns.forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        currentFilter = btn.getAttribute('data-filter');
-                        
-                        // Update active button
-                        filterBtns.forEach(b => b.classList.remove('active'));
-                        btn.classList.add('active');
-                        
-                        // Filter cards
-                        const cards = document.querySelectorAll('.card-item');
-                        cards.forEach(card => {
-                            const rarity = card.getAttribute('card-rarity');
-                            
-                            if (currentFilter === 'all' || rarity === currentFilter) {
-                                card.setAttribute('visible', 'true');
-                                card.setAttribute('animation__show', {
-                                    property: 'scale',
-                                    to: '1 1 1',
-                                    dur: 300,
-                                    easing: 'easeOutBack'
-                                });
-                            } else {
-                                card.setAttribute('animation__hide', {
-                                    property: 'scale',
-                                    to: '0 0 0',
-                                    dur: 300,
-                                    easing: 'easeInBack'
-                                });
-                                
-                                setTimeout(() => {
-                                    card.setAttribute('visible', 'false');
-                                }, 300);
-                            }
-                        });
-                    });
-                });
-            }
-            
-            // Search System
-            function setupSearchSystem() {
-                searchInput.addEventListener('input', (e) => {
-                    const searchTerm = e.target.value.toLowerCase();
-                    const cards = document.querySelectorAll('.card-item');
-                    
-                    cards.forEach(card => {
-                        const cardName = card.getAttribute('card-name').toLowerCase();
-                        const cardId = card.getAttribute('card-id');
-                        
-                        if (cardName.includes(searchTerm) || cardId.includes(searchTerm)) {
-                            card.setAttribute('visible', 'true');
-                            card.setAttribute('animation__show', {
-                                property: 'scale',
-                                to: '1 1 1',
-                                dur: 300,
-                                easing: 'easeOutBack'
-                            });
-                        } else {
-                            card.setAttribute('animation__hide', {
-                                property: 'scale',
-                                to: '0 0 0',
-                                dur: 300,
-                                easing: 'easeInBack'
-                            });
-                            
-                            setTimeout(() => {
-                                card.setAttribute('visible', 'false');
-                            }, 300);
+                cards.forEach(card => {
+                    card.addEventListener('click', () => {
+                        if (currentCard === card) {
+                            showCardDetail(card);
                         }
                     });
                 });
             }
             
-            // VR Button
-            function setupVRButton() {
-                const vrBtn = document.getElementById('vr-btn');
+            // Show card detail
+            function showCardDetail(card) {
+                const cardId = card.getAttribute('card-id');
+                const cardData = cardDatabase[cardId];
                 
-                vrBtn.addEventListener('click', () => {
-                    if (scene.is('vr-mode')) {
-                        scene.exitVR();
-                        vrBtn.textContent = '👓 VR';
-                    } else {
-                        scene.enterVR();
-                        vrBtn.textContent = '👓 EXIT VR';
+                if (!cardData) return;
+                
+                const detailDisplay = document.getElementById('card-detail-display');
+                const detailName = document.getElementById('detail-card-name');
+                const detailInfo = document.getElementById('detail-card-info');
+                const detailArtist = document.getElementById('detail-card-artist');
+                
+                detailName.setAttribute('value', `${cardData.name} ${cardData.number}`);
+                detailInfo.setAttribute('value', `${cardData.rarity} - ${cardData.description}`);
+                detailArtist.setAttribute('value', cardData.artist);
+                
+                // Position detail display near the card
+                const cardWorldPos = getWorldPosition(card);
+                detailDisplay.setAttribute('position', {
+                    x: cardWorldPos.x,
+                    y: cardWorldPos.y,
+                    z: cardWorldPos.z + 1.5
+                });
+                
+                detailDisplay.setAttribute('visible', 'true');
+                isViewingDetail = true;
+                
+                // Play sound
+                playSound('click-sound', 0.3);
+                
+                // Auto-hide after 8 seconds
+                setTimeout(() => {
+                    if (isViewingDetail && currentCard === card) {
+                        hideCardDetail();
                     }
+                }, 8000);
+            }
+            
+            // Hide card detail
+            function hideCardDetail() {
+                const detailDisplay = document.getElementById('card-detail-display');
+                detailDisplay.setAttribute('visible', 'false');
+                isViewingDetail = false;
+            }
+            
+            // Back portal
+            function setupBackPortal() {
+                const portal = document.getElementById('back-portal');
+                
+                portal.addEventListener('click', () => {
+                    proximityText.textContent = 'Returning to hub...';
+                    proximityIndicator.classList.add('active');
+                    
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 500);
                 });
             }
             
-            // Utility: Play Sound
+            // Get world position considering parent transforms
+            function getWorldPosition(entity) {
+                const pos = entity.getAttribute('position');
+                const parent = entity.parentNode;
+                
+                if (parent && parent.getAttribute('position')) {
+                    const parentPos = parent.getAttribute('position');
+                    const parentRot = parent.getAttribute('rotation') || {x: 0, y: 0, z: 0};
+                    
+                    // Simple rotation around Y axis
+                    const rad = (parentRot.y * Math.PI) / 180;
+                    const cos = Math.cos(rad);
+                    const sin = Math.sin(rad);
+                    
+                    return {
+                        x: parentPos.x + (pos.x * cos - pos.z * sin),
+                        y: parentPos.y + pos.y,
+                        z: parentPos.z + (pos.x * sin + pos.z * cos)
+                    };
+                }
+                
+                return pos;
+            }
+            
+            // Calculate 3D distance
+            function calculateDistance(pos1, pos2) {
+                const dx = pos1.x - pos2.x;
+                const dy = pos1.y - pos2.y;
+                const dz = pos1.z - pos2.z;
+                return Math.sqrt(dx * dx + dy * dy + dz * dz);
+            }
+            
+            // Play sound
             function playSound(soundId, volume = 0.5) {
                 const soundEl = document.getElementById(soundId);
                 if (soundEl) {
@@ -769,47 +580,32 @@
                 }
             }
             
-            // Register Custom Component: Rotatable
-            AFRAME.registerComponent('rotatable', {
-                schema: {
-                    speed: { default: 0.5 }
-                },
-                init: function() {
-                    this.isRotating = false;
-                    this.lastMouseX = 0;
-                    
-                    this.el.addEventListener('mousedown', (e) => {
-                        this.isRotating = true;
-                        this.lastMouseX = e.clientX;
-                    });
-                    
-                    document.addEventListener('mousemove', (e) => {
-                        if (this.isRotating) {
-                            const delta = e.clientX - this.lastMouseX;
-                            const rotation = this.el.getAttribute('rotation');
-                            rotation.y += delta * this.data.speed;
-                            this.el.setAttribute('rotation', rotation);
-                            this.lastMouseX = e.clientX;
-                        }
-                    });
-                    
-                    document.addEventListener('mouseup', () => {
-                        this.isRotating = false;
-                    });
-                }
-            });
+            // Hide back hint after delay
+            function hideBackHint() {
+                setTimeout(() => {
+                    backHint.style.opacity = '0';
+                    backHint.style.transition = 'opacity 1s ease';
+                }, 5000);
+            }
             
-            // Initialize when ready
+            // Hide loading
+            function hideLoadingScreen() {
+                scene.addEventListener('loaded', () => {
+                    setTimeout(() => {
+                        loadingScreen.style.opacity = '0';
+                        setTimeout(() => {
+                            loadingScreen.style.display = 'none';
+                        }, 500);
+                    }, 1000);
+                });
+            }
+            
+            // Initialize
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', init);
             } else {
                 init();
             }
-            
-            // Scene loaded
-            scene.addEventListener('loaded', () => {
-                console.log('GPK Vintage Collection loaded');
-            });
             
         })();
     </script>
