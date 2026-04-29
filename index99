@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPK Virtual Collection Binder</title>
+    <style>
+        /* Retro GPK Styling */
+        :root {
+            --gpk-red: #e71d1d;
+            --gpk-blue: #1d4ee7;
+            --gpk-yellow: #f7d417;
+            --gpk-green: #1de71d;
+            --gpk-pink: #e71d9b;
+            --gpk-orange: #e77b1d;
+        }
+        
+        body {
+            background-color: #f0e6d2;
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h100v100H0z" fill="none"/><path d="M20 20h60v60H20z" stroke="%23d9c7a7" stroke-width="2" fill="none"/></svg>');
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+            padding: 20px;
+            color: #333;
+        }
+        
+        /* Retro Button Styles */
+        .btn-gpk {
+            background: linear-gradient(to bottom, var(--gpk-red), #c00);
+            color: var(--gpk-yellow);
+            padding: 10px 20px;
+            border-radius: 30px;
+            border: 3px solid black;
+            font-weight: bold;
+            font-size: 18px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.2), 
+                        inset 0 2px 2px rgba(255,255,255,0.3);
+            text-shadow: 2px 2px 0 rgba(0,0,0,0.3);
+            letter-spacing: 1px;
+            animation: pulse 2s infinite;
+        }
+        
+        .btn-gpk:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 0 rgba(0,0,0,0.2), 
+                        inset 0 2px 2px rgba(255,255,255,0.3);
+            animation: none;
+        }
+        
+        .btn-gpk:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+        }
+        
+        /* Virtual Binder Container */
+        .virtual-room-container {
+            max-width: 1200px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 15px;
+            border: 8px solid #333;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3),
+                        inset 0 0 50px rgba(0,0,0,0.1);
+            overflow: hidden;
+            display: none;
+            transform: scale(0.9);
+            opacity: 0;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .virtual-room-container.show {
+            display: block;
+            transform: scale(1);
+            opacity: 1;
+        }
+        
+        /* Header Styles */
+        .room-header {
+            background: linear-gradient(to right, var(--gpk-red), var(--gpk-orange));
+            padding: 15px 25px;
+            border-bottom: 5px solid #333;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .room-header::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="3" fill="black" opacity="0.1"/><circle cx="50" cy="50" r="4" fill="black" opacity="0.1"/><circle cx="80" cy="30" r="3" fill="black" opacity="0.1"/></svg>');
+        }
+        
+        .room-header h1 {
+            font-size: 28px;
+            color: var(--gpk-yellow);
+            text-shadow: 3px 3px 0 rgba(0,0,0,0.5),
+                        -1px -1px 0 rgba(0,0,0,0.3);
+            letter-spacing: 2px;
+            margin: 0;
+            position: relative;
+            text-align: center;
+            font-style: italic;
+        }
+        
+        .user-controls {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .avatar {
+            width: 50px;
+            height: 50px;
+            background-color: var(--gpk-blue);
+            color: white;
+            border-radius: 50%;
+            border: 3px solid black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        
+        .avatar:hover {
+            transform: rotate(15deg) scale(1.1);
+            background-color: var(--gpk-pink);
+        }
+        
+        /* Navigation Styles */
+        .room-nav {
+            background: linear-gradient(to bottom, #555, #333);
+            padding: 10px 20px;
+            border-bottom: 3px solid #111;
+        }
+        
+        .room-nav ul {
+            display: flex;
+            list-style: none;
+            gap: 5px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .room-nav li {
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 20px;
+            color: white;
+            background: #444;
+            border: 2px solid #222;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .room-nav li::before {
+            content: "";
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .room-nav li:hover::before {
+            opacity: 1;
+        }
+        
+        .room-nav li.active {
+            background: linear-gradient(to bottom, var(--gpk-green), #0a0);
+            color: black;
+            border-color: black;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+            animation: bounce 0.5s;
+        }
+        
+        /* Main Content Area */
+        .card-display-area {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 25px;
+            padding: 25px;
+            min-height: 500px;
+            background-color: #e8e1d1;
+            background-image: url('data:image/svg+xml;utf8,<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><path d="M0 0h100v100H0z" fill="none"/><path d="M20 20h60v60H20z" stroke="%23d9c7a7" stroke-width="2" fill="none"/></svg>');
+        }
+        
+        /* Digital Card Styles with Retro GPK Look */
+        .digital-card {
+            width: 100%;
+            height: 300px;
+            perspective: 1000px;
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.3s;
+        }
+        
+        .digital-card:hover {
+            transform: translateY(-10px) rotateZ(2deg);
+        }
+        
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        
+        .digital-card.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 10px;
+            padding: 10px;
+            box-sizing: border-box;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            border: 5px solid #333;
+        }
+        
+        .card-front {
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(135deg, #ffffff 0%, #f1f1f1 100%);
+            transform: rotateY(0deg);
+        }
+        
+        .card-front::before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border: 2px dashed rgba(0,0,0,0.1);
+            border-radius: 5px;
+            pointer-events: none;
+        }
+        
+        .card-front img {
+            width: 100%;
+            height: 180px;
+            object-fit: contain;
+            border-radius: 5px;
+            border: 2px solid #333;
+            background-color: white;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1);
+        }
+        
+        .card-front h3 {
+            margin-top: 10px;
+            color: #333;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 1px 1px 0 rgba(0,0,0,0.1);
+            background: var(--gpk-yellow);
+            padding: 3px 10px;
+            border-radius: 15px;
+            border: 2px solid #333;
+            width: 90%;
+        }
+        
+        .card-front p {
+            color: #333;
+            font-size: 12px;
+            font-weight: bold;
+            background: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+        }
+        
+        .card-back {
+            background: linear-gradient(135deg, #e0e0e0 0%, #c0c0c0 100%);
+            transform: rotateY(180deg);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 15px;
+        }
+        
+        .card-back::before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border: 2px dashed rgba(0,0,0,0.2);
+            border-radius: 5px;
+            pointer-events: none;
+        }
+        
+        .card-back p {
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 10px;
+            line-height: 1.4;
+            background: rgba(255,255,255,0.7);
+            padding: 8px;
+            border-radius: 5px;
+            border: 1px solid #999;
+        }
+        
+        .card-back p:first-child {
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            background: var(--gpk-red);
+            color: white;
+            padding: 5px;
+            border-radius: 15px;
+            border: 2px solid #333;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .card-actions button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 2px solid #333;
+            transition: all 0.3s;
+            box-shadow: 0 3px 0 rgba(0,0,0,0.2);
+        }
+        
+        .card-actions button:active {
+            transform: translateY(2px);
+            box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+        }
+        
+        .trade-btn {
+            background: linear-gradient(to bottom, var(--gpk-green), #0a0);
+            color: black;
+        }
+        
+        .share-btn {
+            background: linear-gradient(to bottom, var(--gpk-blue), #00a);
+            color: white;
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 5px solid var(--gpk-red);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            position: relative;
+            animation: slideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--gpk-red);
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+        
+        .close-modal:hover {
+            transform: rotate(90deg) scale(1.2);
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(-3px); }
+            50% { transform: translateY(-8px); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes cardAppear {
+            from { 
+                transform: scale(0.5) rotate(-10deg);
+                opacity: 0;
+            }
+            to { 
+                transform: scale(1) rotate(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Sticker Effect for Cards */
+        .sticker-effect {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            background: var(--gpk-yellow);
+            color: black;
+            font-weight: bold;
+            padding: 3px 8px;
+            border-radius: 50%;
+            border: 2px solid black;
+            font-size: 12px;
+            transform: rotate(15deg);
+            z-index: 2;
+        }
+        
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .card-display-area {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 15px;
+                padding: 15px;
+            }
+            
+            .digital-card {
+                height: 250px;
+            }
+            
+            .room-nav ul {
+                gap: 3px;
+            }
+            
+            .room-nav li {
+                padding: 5px 10px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Navigation Button -->
+    <div style="text-align: center; margin: 30px 0;">
+        <button class="btn-gpk" id="enterVirtualRoom">
+            <span>👹</span> OPEN GPK BINDER
+        </button>
+    </div>
+    
+    <!-- Virtual Room Container -->
+    <div class="virtual-room-container" id="virtualRoom">
+        <header class="room-header">
+            <h1>GPK DIGITAL TRADING BINDER</h1>
+            <div class="user-controls">
+                <button class="btn-gpk" id="createCardBtn">
+                    <span>✏️</span> CREATE CARD
+                </button>
+                <div class="avatar" id="userAvatar">👾</div>
+            </div>
+        </header>
+        
+        <nav class="room-nav">
+            <ul>
+                <li class="active" data-section="collection">MY PACK</li>
+                <li data-section="trading">TRADE ZONE</li>
+                <li data-section="showcase">RARITIES</li>
+                <li data-section="community">GPK CLUB</li>
+            </ul>
+        </nav>
+        
+        <div class="card-display-area" id="cardDisplay">
+            <!-- Cards will be loaded here dynamically -->
+        </div>
+    </div>
+    
+    <!-- Card Creator Modal -->
+    <div class="modal" id="cardCreatorModal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            <h2 style="color: var(--gpk-red); text-align: center; margin-bottom: 20px;">DESIGN YOUR OWN GROSS-OUT CARD</h2>
+            <div id="cardDesigner" style="background: #f9f9f9; padding: 20px; border-radius: 10px; border: 3px dashed #ccc;">
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <h3 style="color: var(--gpk-blue); border-bottom: 2px solid var(--gpk-blue); padding-bottom: 5px;">CARD PARTS</h3>
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                            <button style="background: var(--gpk-yellow); border: 2px solid black; padding: 5px; cursor: pointer;">HEAD</button>
+                            <button style="background: var(--gpk-green); border: 2px solid black; padding: 5px; cursor: pointer;">BODY</button>
+                            <button style="background: var(--gpk-pink); border: 2px solid black; padding: 5px; cursor: pointer;">FACE</button>
+                            <button style="background: var(--gpk-orange); border: 2px solid black; padding: 5px; cursor: pointer;">ARMS</button>
+                            <button style="background: var(--gpk-blue); border: 2px solid black; padding: 5px; cursor: pointer;">LEGS</button>
+                            <button style="background: var(--gpk-red); border: 2px solid black; padding: 5px; cursor: pointer;">ACCESSORY</button>
+                        </div>
+                    </div>
+                    <div style="flex: 1; min-width: 200px;">
+                        <h3 style="color: var(--gpk-green); border-bottom: 2px solid var(--gpk-green); padding-bottom: 5px;">CUSTOMIZE</h3>
+                        <div>
+                            <input type="text" placeholder="CARD NAME" style="width: 100%; padding: 8px; margin-bottom: 10px; border: 2px solid black; font-family: inherit;">
+                            <textarea placeholder="DISGUSTING DESCRIPTION" style="width: 100%; padding: 8px; height: 100px; border: 2px solid black; font-family: inherit;"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align: center;">
+                    <button class="btn-gpk" style="margin: 0 auto; background: linear-gradient(to bottom, var(--gpk-green), #0a0); color: black;">SAVE GROSS CREATION</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Enhanced sample card data with rarities and animations
+        const sampleCards = [
+            {
+                id: 1,
+                title: "ADAM BOMB",
+                imageUrl: "https://static.wikia.nocookie.net/garbagepailkids/images/7/7d/Adam_Bomb_1st.jpg",
+                series: "SERIES 1",
+                rarity: "COMMON",
+                description: "The original explosive kid! Handle with care or he might just blow up your collection.",
+                animation: "bounce",
+                special: false
+            },
+            {
+                id: 2,
+                title: "NASTY NICK",
+                imageUrl: "https://static.wikia.nocookie.net/garbagepailkids/images/1/1f/Nasty_Nick_1st.jpg",
+                series: "SERIES 1",
+                rarity: "UNCOMMON",
+                description: "This grimy guy never bathes and loves to share his stench with everyone around.",
+                animation: "shake",
+                special: false
+            },
+            {
+                id: 3,
+                title: "BLASTED BILLY",
+                imageUrl: "https://static.wikia.nocookie.net/garbagepailkids/images/6/6b/Blasted_Billy_1st.jpg",
+                series: "SERIES 2",
+                rarity: "RARE",
+                description: "Dynamite and kids don't mix! This walking explosion is always in pieces.",
+                animation: "pulse",
+                special: true
+            },
+            {
+                id: 4,
+                title: "GASEOUS GREG",
+                imageUrl: "https://static.wikia.nocookie.net/garbagepailkids/images/2/2b/Gaseous_Greg_1st.jpg",
+                series: "SERIES 3",
+                rarity: "ULTRA RARE",
+                description: "Warning: Toxic emissions! Greg's farts could clear a stadium in seconds.",
+                animation: "glow",
+                special: true
+            },
+            {
+                id: 5,
+                title: "ALI GATOR",
+                imageUrl: "https://static.wikia.nocookie.net/garbagepailkids/images/3/3f/Ali_Gator_1st.jpg",
+                series: "SERIES 4",
+                rarity: "COMMON",
+                description: "This reptilian rebel chomps first and asks questions never!",
+                animation: "swing",
+                special: false
+            },
+            {
+                id: 6,
+                title: "TOMMY TORCH",
+                imageUrl: "https://static.wikia.nocookie.net/garbagepailkids/images/9/9c/Tommy_Torch_1st.jpg",
+                series: "SERIES 5",
+                rarity: "SUPER RARE",
+                description: "Spontaneous combustion never looked so cute! Keep away from open flames.",
+                animation: "flicker",
+                special: true
+            }
+        ];
+        
+        // DOM Elements
+        const enterVirtualRoomBtn = document.getElementById('enterVirtualRoom');
+        const virtualRoom = document.getElementById('virtualRoom');
+        const cardDisplay = document.getElementById('cardDisplay');
+        const navItems = document.querySelectorAll('.room-nav li');
+        const createCardBtn = document.getElementById('createCardBtn');
+        const cardCreatorModal = document.getElementById('cardCreatorModal');
+        const closeModal = document.querySelector('.close-modal');
+        
+        // Initialize the virtual room
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load sample cards with staggered appearance
+            loadCardsWithAnimation(sampleCards);
+            
+            // Enter virtual room button
+            enterVirtualRoomBtn.addEventListener('click', function() {
+                this.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    this.style.display = 'none';
+                    virtualRoom.classList.add('show');
+                }, 300);
+            });
+            
+            // Navigation handling
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    // Play sound effect in a real implementation
+                    // audioManager.play('click');
+                    
+                    navItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    // Animate section change
+                    cardDisplay.style.animation = 'fadeOut 0.3s';
+                    setTimeout(() => {
+                        cardDisplay.style.animation = 'fadeIn 0.3s';
+                        // In a full implementation, this would load different content
+                        console.log(`Loading section: ${this.dataset.section}`);
+                    }, 300);
+                });
+            });
+            
+            // Card creation
+            createCardBtn.addEventListener('click', function() {
+                cardCreatorModal.style.display = 'flex';
+                // Vibrate on mobile if available
+                if (navigator.vibrate) navigator.vibrate(50);
+            });
+            
+            // Close modal
+            closeModal.addEventListener('click', function() {
+                cardCreatorModal.style.display = 'none';
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', function(event) {
+                if (event.target === cardCreatorModal) {
+                    cardCreatorModal.style.display = 'none';
+                }
+            });
+        });
+        
+        // Function to load cards with staggered animations
+        function loadCardsWithAnimation(cards) {
+            cardDisplay.innerHTML = '';
+            
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    const cardElement = createCardElement(card);
+                    cardDisplay.appendChild(cardElement);
+                    
+                    // Add flip functionality
+                    cardElement.addEventListener('click', function(e) {
+                        // Don't flip if clicking on buttons
+                        if (e.target.tagName === 'BUTTON') return;
+                        
+                        this.classList.toggle('flipped');
+                        // Play sound effect in a real implementation
+                        // audioManager.play('flip');
+                    });
+                    
+                    // Add special animations based on card properties
+                    if (card.animation) {
+                        applyCardAnimation(cardElement, card.animation);
+                    }
+                    
+                    // Add sticker for special cards
+                    if (card.special) {
+                        const sticker = document.createElement('div');
+                        sticker.className = 'sticker-effect';
+                        sticker.textContent = card.rarity.split(' ')[0];
+                        cardElement.querySelector('.card-front').appendChild(sticker);
+                    }
+                }, index * 100); // Stagger appearance
+            });
+        }
+        
+        // Function to create a card element with retro style
+        function createCardElement(cardData) {
+            const card = document.createElement('div');
+            card.className = 'digital-card';
+            card.dataset.id = cardData.id;
+            card.style.animation = 'cardAppear 0.5s forwards';
+            card.style.opacity = '0';
+            
+            card.innerHTML = `
+                <div class="card-inner">
+                    <div class="card-front">
+                        <img src="${cardData.imageUrl}" alt="${cardData.title}">
+                        <h3>${cardData.title}</h3>
+                        <p>${cardData.series} • ${cardData.rarity}</p>
+                    </div>
+                    <div class="card-back">
+                        <p>${cardData.title}</p>
+                        <p>${cardData.description}</p>
+                        <div class="card-actions">
+                            <button class="trade-btn" data-id="${cardData.id}">TRADE</button>
+                            <button class="share-btn" data-id="${cardData.id}">SHARE</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Add event listeners to buttons to prevent card flip when clicking them
+            const buttons = card.querySelectorAll('.card-actions button');
+            buttons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    // Add button press effect
+                    this.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 100);
+                    
+                    if (this.classList.contains('trade-btn')) {
+                        alert(`TRADE REQUESTED FOR ${cardData.title}`);
+                        // In full implementation, would open trade interface
+                    } else {
+                        alert(`SHARING ${cardData.title} WITH YOUR FRIENDS!`);
+                        // In full implementation, would open share dialog
+                    }
+                });
+            });
+            
+            return card;
+        }
+        
+        // Function to apply special animations to cards
+        function applyCardAnimation(cardElement, animationType) {
+            switch(animationType) {
+                case 'pulse':
+                    cardElement.style.animation = 'pulse 2s infinite';
+                    break;
+                case 'bounce':
+                    cardElement.addEventListener('mouseenter', () => {
+                        cardElement.style.animation = 'bounce 0.5s infinite';
+                    });
+                    cardElement.addEventListener('mouseleave', () => {
+                        cardElement.style.animation = '';
+                    });
+                    break;
+                case 'shake':
+                    cardElement.addEventListener('mouseenter', () => {
+                        cardElement.style.transform = 'rotate(-2deg)';
+                        setTimeout(() => {
+                            cardElement.style.transform = 'rotate(2deg)';
+                            setTimeout(() => {
+                                cardElement.style.transform = 'rotate(0)';
+                            }, 100);
+                        }, 100);
+                    });
+                    break;
+                case 'glow':
+                    const front = cardElement.querySelector('.card-front');
+                    front.style.boxShadow = '0 0 15px rgba(255,215,0,0.7)';
+                    front.style.transition = 'box-shadow 0.5s';
+                    cardElement.addEventListener('mouseenter', () => {
+                        front.style.boxShadow = '0 0 25px rgba(255,215,0,0.9)';
+                    });
+                    cardElement.addEventListener('mouseleave', () => {
+                        front.style.boxShadow = '0 0 15px rgba(255,215,0,0.7)';
+                    });
+                    break;
+                case 'swing':
+                    cardElement.style.transformOrigin = 'top center';
+                    cardElement.addEventListener('mouseenter', () => {
+                        cardElement.style.animation = 'swing 1s ease-in-out';
+                    });
+                    break;
+                case 'flicker':
+                    setInterval(() => {
+                        if (Math.random() > 0.7) {
+                            cardElement.style.opacity = '0.8';
+                            setTimeout(() => {
+                                cardElement.style.opacity = '1';
+                            }, 100);
+                        }
+                    }, 3000);
+                    break;
+            }
+        }
+        
+        // Add to stylesheet dynamically for animations we need
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes swing {
+                0% { transform: rotate(0deg); }
+                25% { transform: rotate(5deg); }
+                75% { transform: rotate(-5deg); }
+                100% { transform: rotate(0deg); }
+            }
+            
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+            
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>

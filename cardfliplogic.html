@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Interactive 3D Cards</title>
+  <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+  <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      touch-action: none;
+      font-family: Arial;
+    }
+    #controls {
+      position: fixed;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      z-index: 1000;
+    }
+    .control-btn {
+      width: 80px;
+      height: 80px;
+      background: rgba(0,200,255,0.7);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+      user-select: none;
+    }
+    #closeup-view {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 2000;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #closeup-img {
+      max-width: 90%;
+      max-height: 70%;
+      object-fit: contain;
+    }
+    #closeup-back {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background: #00a8ff;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <a-scene loading-screen="dotsColor: #00ffff; backgroundColor: #111"
+           cursor="rayOrigin: mouse"
+           raycaster="objects: .card"
+           renderer="antialias: true">
+
+    <!-- Camera (positioned for card viewing) -->
+    <a-entity camera look-controls="touchEnabled: true; mouseEnabled: false"
+              position="0 1.5 3">
+      <a-cursor></a-cursor>
+    </a-entity>
+
+    <!-- Lighting -->
+    <a-entity light="type: ambient; intensity: 0.4"></a-entity>
+    <a-entity light="type: directional; intensity: 0.6" position="-1 1 1"></a-entity>
+
+    <!-- Card Container -->
+    <a-entity id="card-container" position="0 1.5 0">
+      <!-- Cards will be added here by JavaScript -->
+    </a-entity>
+
+  </a-scene>
+
+  <!-- Mobile Controls -->
+  <div id="controls">
+    <div class="control-btn" id="prev-btn">PREV</div>
+    <div class="control-btn" id="flip-btn">FLIP</div>
+    <div class="control-btn" id="next-btn">NEXT</div>
+  </div>
+
+  <!-- Close-up View -->
+  <div id="closeup-view">
+    <img id="closeup-img" src="" alt="Close-up view">
+    <button id="closeup-back">BACK</button>
+  </div>
+
+  <script>
+    // Your image URLs (replace with your own)
+    const cardImages = [
+      {
+        front: "https://example.com/your-image1.jpg",
+        back: "https://example.com/your-card-back1.jpg",
+        info: "Description of image 1"
+      },
+      {
+        front: "https://example.com/your-image2.jpg",
+        back: "https://example.com/your-card-back2.jpg",
+        info: "Description of image 2"
+      },
+      // Add more images as needed
+    ];
+
+    // Current card index
+    let currentCardIndex = 0;
+    let currentCard = null;
+
+    // Create cards when scene is ready
+    document.querySelector('a-scene').addEventListener('loaded', () => {
+      createCards();
+      showCard(0);
+    });
+
+    function createCards() {
+      const container = document.getElementById('card-container');
+      
+      cardImages.forEach((card, index) => {
+        // Create card entity
+        const cardEl = document.createElement('a-entity');
+        cardEl.classList.add('card');
+        cardEl.setAttribute('data-index', index);
+        cardEl.setAttribute('visible', 'false');
+        
+        // Card geometry
+        cardEl.setAttribute('geometry', 'primitive: box; width: 1.6; height: 2.2; depth: 0.05');
+        cardEl.setAttribute('material', `src: ${card.front}; side: front`);
+        
+        // Back side
+        const back = document.createElement('a-entity');
+        back.setAttribute('geometry', 'primitive: box; width: 1.6; height: 2.2; depth: 0.05');
+        back.setAttribute('material', `src: ${card.back}; side: back`);
+        back.setAttribute('position', '0 0 -0.051');
+        back.setAttribute('rotation', '0 180 0');
+        cardEl.appendChild(back);
+        
+        // Add click/tap handler
+        cardEl.addEventListener('click', () => {
+          showCloseup(card.front, card.info);
+        });
+        
+        container.appendChild(cardEl);
+      });
+    }
+
+    function showCard(index) {
+      // Hide current card
+      if (currentCard) {
+        currentCard.setAttribute('visible', 'false');
+        currentCard.setAttribute('animation', '');
+      }
+      
+      // Show new card
+      const cards = document.querySelectorAll('.card');
+      currentCard = cards[index];
+      currentCard.setAttribute('visible', 'true');
+      currentCardIndex = index;
+      
+      // Position card in front of camera
+      currentCard.setAttribute('position', '0 0 -1.5');
+      currentCard.setAttribute('rotation', '0 0 0');
+    }
+
+    function flipCard() {
+      if (!currentCard) return;
+      
+      const isFlipped = currentCard.getAttribute('rotation').y !== 0;
+      
+      currentCard.setAttribute('animation', {
+        property: 'rotation.y',
+        to: isFlipped ? 0 : 180,
+        dur: 800,
+        easing: 'easeInOutQuad'
+      });
+    }
+
+    function showCloseup(imgSrc, info) {
+      const closeup = document.getElementById('closeup-view');
+      const img = document.getElementById('closeup-img');
+      
+      img.src = imgSrc;
+      img.alt = info;
+      closeup.style.display = 'flex';
+    }
+
+    // Set up controls
+    document.getElementById('prev-btn').addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const newIndex = (currentCardIndex - 1 + cardImages.length) % cardImages.length;
+      showCard(newIndex);
+    });
+
+    document.getElementById('next-btn').addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const newIndex = (currentCardIndex + 1) % cardImages.length;
+      showCard(newIndex);
+    });
+
+    document.getElementById('flip-btn').addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      flipCard();
+    });
+
+    document.getElementById('closeup-back').addEventListener('click', () => {
+      document.getElementById('closeup-view').style.display = 'none';
+    });
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+      const scene = document.querySelector('a-scene');
+      if (scene.hasLoaded) {
+        scene.camera.aspect = window.innerWidth / window.innerHeight;
+        scene.camera.updateProjectionMatrix();
+        scene.renderer.setSize(window.innerWidth, window.innerHeight);
+      }
+    });
+  </script>
+</body>
+</html>

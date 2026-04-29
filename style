@@ -1,0 +1,198 @@
+/* GPK Theme Stylesheet */
+@font-face {
+  font-family: 'Melted Monster';
+  src: url('fonts/Melted_Monster.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Base Styles */
+:root {
+  --gpk-red: #ff3e41;
+  --gpk-yellow: #ffde37;
+  --gpk-blue: #2e86ab;
+  --gpk-black: #1a1a1a;
+  --gpk-paper: #f5f5f0;
+  --gpk-accent: #ff00ff;
+}
+
+body {
+  font-family: 'Bangers', cursive, sans-serif;
+  background-color: var(--gpk-paper);
+  color: var(--gpk-black);
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+  letter-spacing: 0.5px;
+  background-image: url('images/gpk-bg-texture.png');
+  background-size: cover;
+  background-attachment: fixed;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Melted Monster', 'Bangers', cursive;
+  color: var(--gpk-red);
+  text-transform: uppercase;
+  margin: 0.5em 0;
+  text-shadow: 2px 2px 0 var(--gpk-yellow),
+              -1px -1px 0 var(--gpk-blue),
+              1px -1px 0 var(--gpk-blue),
+              -1px 1px 0 var(--gpk-blue);
+}
+
+h1 {
+  font-size: 3.5rem;
+  letter-spacing: 3px;
+}
+
+h2 {
+  font-size: 2.8rem;
+  letter-spacing: 2px;
+}
+
+h3 {
+  font-size: 2.2rem;
+}
+
+p, li, a, span, div {
+  font-family: 'Bangers', cursive, sans-serif;
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+}
+
+a {
+  color: var(--gpk-blue);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  color: var(--gpk-red);
+  text-shadow: 0 0 5px var(--gpk-accent);
+}
+
+/* Buttons */
+.button, button, input[type="button"], input[type="submit"] {
+  font-family: 'Melted Monster', 'Bangers', cursive;
+  background-color: var(--gpk-yellow);
+  color: var(--gpk-black);
+  border: 3px solid var(--gpk-black);
+  border-radius: 30px;
+  padding: 10px 25px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.3s ease;
+  box-shadow: 5px 5px 0 var(--gpk-red);
+}
+
+.button:hover, button:hover, input[type="button"]:hover, input[type="submit"]:hover {
+  background-color: var(--gpk-red);
+  color: white;
+  box-shadow: 5px 5px 0 var(--gpk-blue);
+  transform: translate(-2px, -2px);
+}
+
+/* Cards */
+.card {
+  background: white;
+  border: 5px solid var(--gpk-black);
+  border-radius: 15px;
+  padding: 20px;
+  margin: 15px;
+  box-shadow: 8px 8px 0 rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  transform: translate(-5px, -5px);
+  box-shadow: 13px 13px 0 var(--gpk-accent);
+}
+
+.card-title {
+  font-family: 'Melted Monster', cursive;
+  color: var(--gpk-red);
+  font-size: 2rem;
+}
+
+/* Navigation */
+.navbar {
+  background: linear-gradient(135deg, var(--gpk-red), var(--gpk-yellow));
+  padding: 15px;
+  border-bottom: 5px solid var(--gpk-black);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.nav-link {
+  font-family: 'Melted Monster', cursive;
+  font-size: 1.8rem;
+  margin: 0 15px;
+}
+
+/* Forms */
+input, textarea, select {
+  font-family: 'Bangers', cursive;
+  border: 3px solid var(--gpk-black);
+  padding: 10px;
+  font-size: 1.2rem;
+  background-color: white;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--gpk-blue);
+  box-shadow: 0 0 10px var(--gpk-accent);
+}
+
+/* Special GPK Elements */
+.gpk-sticker {
+  position: relative;
+  display: inline-block;
+  padding: 5px 15px;
+  background-color: var(--gpk-yellow);
+  border: 3px dashed var(--gpk-red);
+  transform: rotate(-5deg);
+}
+
+.gpk-badge {
+  display: inline-block;
+  padding: 5px 10px;
+  background-color: var(--gpk-red);
+  color: white;
+  border-radius: 50%;
+  font-family: 'Melted Monster', cursive;
+  font-size: 1.5rem;
+  width: 40px;
+  height: 40px;
+  text-align: center;
+  line-height: 40px;
+}
+
+/* Animations */
+@keyframes gpkPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.pulse {
+  animation: gpkPulse 2s infinite;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+  
+  h2 {
+    font-size: 2rem;
+  }
+  
+  .button, button {
+    font-size: 1.2rem;
+    padding: 8px 15px;
+  }
+}

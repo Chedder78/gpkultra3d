@@ -2,8 +2,34 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPK ULTRA | Collector's Hub</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>GPK ULTRA 3D | Immersive Collector's Hub</title>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://aframe.io/releases/1.5.0/aframe.min.js" as="script">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" as="style">
+    
+    <!-- WebXR and PWA meta tags -->
+    <meta name="theme-color" content="#1a1a1a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="GPK Ultra 3D">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="msapplication-TileColor" content="#1a1a1a">
+    <meta name="description" content="GPK Ultra 3D - Immersive Garbage Pail Kids Collector's Experience">
+    
+    <!-- A-Frame Core (Updated to 1.5.0 for better performance) -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    
+    <!-- A-Frame Components (Optimized selection) -->
+    <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-layout-component@5.3.0/dist/aframe-layout-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-template-component@3.2.1/dist/aframe-template-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
+    <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://unpkg.com/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
+    
     <style>
         :root {
             --gpk-red: #ff3e41;
@@ -11,573 +37,957 @@
             --gpk-blue: #2e86ab;
             --gpk-black: #1a1a1a;
             --gpk-paper: #f5f5f0;
+            --gpk-green: #4caf50;
+            --transition-fast: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --transition-medium: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            --transition-slow: 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Bangers', cursive, sans-serif;
         }
         
         body {
-            background-color: var(--gpk-paper);
-            color: var(--gpk-black);
-            overflow-x: hidden;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        /* Retro GPK Header */
-        header {
-            background: linear-gradient(135deg, var(--gpk-red), var(--gpk-yellow));
-            padding: 1rem;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            border-bottom: 4px solid var(--gpk-black);
-        }
-        
-        .logo {
-            font-size: 3rem;
-            text-align: center;
-            text-shadow: 3px 3px 0 var(--gpk-blue),
-                         -1px -1px 0 #fff,
-                         1px -1px 0 #fff,
-                         -1px 1px 0 #fff;
-            letter-spacing: 2px;
-        }
-        
-        /* 3D Card Grid */
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 2rem;
-            padding: 2rem;
-            perspective: 1000px;
-            flex: 1;
-        }
-        
-        .card-container {
-            position: relative;
-            height: 380px;
-            transform-style: preserve-3d;
-            transition: transform 0.8s;
-            cursor: pointer;
-        }
-        
-        .card-container.flipped {
-            transform: rotateY(180deg);
-        }
-        
-        .card-face {
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            backface-visibility: hidden;
-            border-radius: 12px;
+            font-family: 'Bangers', 'Comic Sans MS', cursive, sans-serif;
+            background-color: var(--gpk-black);
+            color: white;
             overflow: hidden;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            border: 4px solid var(--gpk-black);
+            width: 100vw;
+            height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            touch-action: manipulation;
         }
-        
-        .card-front {
-            background: white;
-            display: flex;
-            flex-direction: column;
-            transform: rotateY(0deg);
-        }
-        
-        .card-back {
-            background: repeating-linear-gradient(
-                45deg,
-                var(--gpk-red),
-                var(--gpk-red) 10px,
-                var(--gpk-yellow) 10px,
-                var(--gpk-yellow) 20px
-            );
-            transform: rotateY(180deg);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .card-image {
-            flex: 1;
-            background-size: contain;
-            background-repeat: no-repeat;
-            background-position: center;
-        }
-        
-        .card-info {
-            padding: 1rem;
-            background: white;
-            border-top: 3px solid var(--gpk-black);
-        }
-        
-        .card-title {
-            font-size: 1.5rem;
-            margin-bottom: 0.5rem;
-            color: var(--gpk-red);
-        }
-        
-        /* WebGL Card Viewer Container */
-        #webgl-container {
+
+        /* Enhanced Loading Screen with GPU Acceleration */
+        #loading-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 1000;
-            display: none;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
+            z-index: 9999;
+            transition: opacity 0.8s ease-out;
+            will-change: opacity;
+            pointer-events: all;
         }
         
-        #webgl-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: var(--gpk-red);
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            font-size: 1.2rem;
-            cursor: pointer;
+        .loading-logo {
+            width: min(200px, 40vw);
+            height: auto;
+            margin-bottom: 2rem;
+            filter: drop-shadow(0 0 20px var(--gpk-yellow));
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .loading-progress {
+            width: min(80%, 300px);
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 4px;
+            margin: 1.5rem 0;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        /* Sticky Cart Button */
-        .cart-button {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: var(--gpk-blue);
-            color: white;
-            border: none;
+        .loading-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--gpk-red), var(--gpk-yellow));
+            transition: width 0.3s ease;
+            border-radius: 4px;
+            box-shadow: 0 0 15px rgba(255, 222, 55, 0.5);
+        }
+        
+        .loading-spinner {
             width: 60px;
             height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
             border-radius: 50%;
+            border-top-color: var(--gpk-yellow);
+            border-right-color: var(--gpk-red);
+            animation: spin 1.2s linear infinite;
+            margin-bottom: 1rem;
+        }
+        
+        .loading-text {
+            font-size: clamp(1rem, 3vw, 1.5rem);
+            color: white;
+            text-align: center;
+            text-shadow: 0 0 15px var(--gpk-yellow);
+            margin-top: 1rem;
+            letter-spacing: 3px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        /* Screen Info Panel */
+        .screen-info {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 26, 26, 0.95);
+            padding: 20px 35px;
+            border-radius: 20px;
+            border: 3px solid var(--gpk-yellow);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 222, 55, 0.2);
+            z-index: 1000;
+            display: none;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            max-width: 90vw;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .screen-info.active {
+            display: block;
+            animation: slideUp 0.3s ease;
+        }
+        
+        .screen-info h3 {
+            color: var(--gpk-yellow);
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
+            margin-bottom: 0.5rem;
+            text-shadow: 3px 3px 0 var(--gpk-red);
+            letter-spacing: 1px;
+        }
+        
+        .screen-info p {
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            color: #ffffff;
+            margin-bottom: 0.8rem;
+            opacity: 0.9;
+        }
+        
+        .screen-hotkeys {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+        
+        .screen-hotkeys span {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--gpk-yellow);
+        }
+
+        /* Navigation Controls */
+        .nav-controls {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 1000;
+        }
+        
+        .nav-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(26, 26, 26, 0.9);
+            border: 2px solid var(--gpk-yellow);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             font-size: 1.5rem;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            z-index: 50;
+            transition: all 0.2s ease;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            font-family: 'Bangers', cursive;
         }
         
-        .cart-count {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: var(--gpk-red);
+        .nav-btn:hover {
+            background: var(--gpk-yellow);
+            color: var(--gpk-black);
+            transform: scale(1.15);
+            box-shadow: 0 6px 20px rgba(255, 222, 55, 0.4);
+        }
+        
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* VR Mode Indicator */
+        .vr-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(46, 134, 171, 0.9);
+            border: 2px solid var(--gpk-blue);
             color: white;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 0.8rem;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            z-index: 1000;
+            display: none;
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            animation: pulse 2s infinite;
+            letter-spacing: 2px;
         }
         
-        /* Footer Styles */
-        footer {
-            background: var(--gpk-black);
-            color: white;
-            padding: 2rem;
-            margin-top: auto;
+        .vr-indicator.active {
+            display: block;
         }
-        
-        .footer-content {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .footer-section h3 {
-            color: var(--gpk-yellow);
-            margin-bottom: 1rem;
-            font-size: 1.3rem;
-        }
-        
-        .footer-section ul {
-            list-style: none;
-        }
-        
-        .footer-section li {
-            margin-bottom: 0.5rem;
-        }
-        
-        .footer-section a {
-            color: white;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        
-        .footer-section a:hover {
-            color: var(--gpk-red);
-        }
-        
-        .social-links {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-        
-        .social-links a {
-            display: inline-block;
-            width: 40px;
-            height: 40px;
-            background: var(--gpk-blue);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 1.2rem;
-        }
-        
-        .copyright {
+
+        /* Mobile Warning */
+        .mobile-warning {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(26, 26, 26, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid var(--gpk-yellow);
+            z-index: 1001;
             text-align: center;
-            margin-top: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255,255,255,0.1);
+            display: none;
+        }
+        
+        .mobile-warning h3 {
+            color: var(--gpk-yellow);
+            margin-bottom: 15px;
+        }
+        
+        .mobile-warning button {
+            background: var(--gpk-yellow);
+            color: var(--gpk-black);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            font-family: 'Bangers', cursive;
+            margin-top: 15px;
+        }
+
+        /* Keyframes */
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .loading-logo {
+                width: 150px;
+            }
+            
+            .screen-info {
+                padding: 15px 25px;
+                bottom: 20px;
+            }
+            
+            .nav-controls {
+                bottom: 20px;
+                right: 20px;
+                gap: 10px;
+            }
+            
+            .nav-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1.3rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .loading-logo {
+                width: 120px;
+            }
+            
+            .screen-info {
+                padding: 12px 20px;
+                border-radius: 15px;
+            }
+            
+            .nav-controls {
+                bottom: 15px;
+                right: 15px;
+                gap: 8px;
+            }
+            
+            .nav-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
         }
     </style>
-    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
 </head>
 <body>
-    <header>
-        <div class="logo">GPK ULTRA</div>
-    </header>
-    
-    <div class="card-grid" id="cardGrid">
-        <!-- Cards will be injected here by JavaScript -->
-    </div>
-    
-    <button class="cart-button">
-        🛒
-        <span class="cart-count">0</span>
-    </button>
-    
-    <div id="webgl-container">
-        <button id="webgl-close">X CLOSE</button>
-        <canvas id="webgl-canvas"></canvas>
-    </div>
-    
-    <footer>
-        <div class="footer-content">
-            <div class="footer-section">
-                <h3>About GPK ULTRA</h3>
-                <p>The ultimate destination for Garbage Pail Kids collectors. Buy, sell, trade, and showcase your collection with fellow enthusiasts.</p>
-                <div class="social-links">
-                    <a href="#" aria-label="Instagram">📸</a>
-                    <a href="#" aria-label="Facebook">👍</a>
-                    <a href="#" aria-label="Twitter">🐦</a>
-                    <a href="#" aria-label="YouTube">▶️</a>
-                </div>
-            </div>
-            
-            <div class="footer-section">
-                <h3>Quick Links</h3>
-                <ul>
-                    <li><a href="#">Browse Cards</a></li>
-                    <li><a href="#">New Releases</a></li>
-                    <li><a href="#">Rare Finds</a></li>
-                    <li><a href="#">Collection Tracker</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-section">
-                <h3>Legal</h3>
-                <ul>
-                    <li><a href="#">Terms of Service</a></li>
-                    <li><a href="#">Privacy Policy</a></li>
-                    <li><a href="#">Shipping Policy</a></li>
-                    <li><a href="#">Returns</a></li>
-                </ul>
-            </div>
-            
-            <div class="footer-section">
-                <h3>Contact</h3>
-                <ul>
-                    <li>Email: collect@gpkultra.com</li>
-                    <li>Phone: (555) GPK-ULTRA</li>
-                    <li>PO Box 1234</li>
-                    <li>Topps Town, NY 10001</li>
-                </ul>
-            </div>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <img src="https://upload.wikimedia.org/wikipedia/en/4/4f/Garbage_Pail_Kids_Logo.svg" 
+             alt="GPK Logo" 
+             class="loading-logo"
+             onerror="this.style.display='none'">
+        <div class="loading-spinner"></div>
+        <div class="loading-progress">
+            <div class="loading-progress-bar" id="progress-bar"></div>
         </div>
+        <div class="loading-text" id="loading-text">INITIALIZING GPK ULTRA 3D...</div>
+    </div>
+
+    <!-- Screen Info Panel -->
+    <div id="screen-info" class="screen-info">
+        <h3 id="screen-title">SCREEN TITLE</h3>
+        <p id="screen-description">Click to enter this experience</p>
+        <div id="screen-hotkeys" class="screen-hotkeys"></div>
+    </div>
+
+    <!-- Mobile Warning -->
+    <div id="mobile-warning" class="mobile-warning">
+        <h3>📱 MOBILE DEVICE DETECTED</h3>
+        <p>For the best experience, use a desktop computer or VR headset.</p>
+        <button onclick="this.parentElement.style.display='none'">CONTINUE ANYWAY</button>
+    </div>
+
+    <!-- VR Mode Indicator -->
+    <div class="vr-indicator" id="vr-indicator">
+        🥽 VR MODE ACTIVE
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="nav-controls">
+        <button class="nav-btn" id="reset-view" title="Reset View">↻</button>
+        <button class="nav-btn" id="vr-btn" title="Enter VR">👓</button>
+        <button class="nav-btn" id="help-btn" title="Help">?</button>
+        <button class="nav-btn" id="fullscreen-btn" title="Fullscreen">⛶</button>
+    </div>
+
+    <!-- A-Frame Scene -->
+    <a-scene 
+        renderer="colorManagement: true; antialias: true; precision: high; physicallyCorrectLights: true; exposure: 1.0; toneMapping: ACESFilmic"
+        vr-mode-ui="enabled: true"
+        device-orientation-permission-ui="enabled: false"
+        background="color: #1a1a1a"
+        physics="debug: false"
+    >
+        <!-- Main Room Environment -->
+        <a-entity id="room" 
+                  geometry="primitive: box; width: 20; height: 8; depth: 20"
+                  material="shader: standard; color: #2a2a2a; metalness: 0.1; roughness: 0.8; side: back"
+                  position="0 4 0">
+            
+            <!-- Enhanced Floor -->
+            <a-entity geometry="primitive: plane; width: 20; height: 20" 
+                     rotation="-90 0 0" 
+                     position="0 0 0"
+                     material="shader: standard; color: #1a1a1a; metalness: 0.3; roughness: 0.5" 
+                     class="floor">
+            </a-entity>
+            
+            <!-- Ceiling -->
+            <a-entity geometry="primitive: plane; width: 20; height: 20" 
+                     rotation="90 0 0" 
+                     position="0 8 0"
+                     material="shader: standard; color: #151515; metalness: 0.05; roughness: 0.9">
+            </a-entity>
+            
+            <!-- Walls -->
+            <a-entity geometry="primitive: plane; width: 20; height: 8" 
+                     position="0 4 -10"
+                     material="shader: standard; color: #252525; metalness: 0.1; roughness: 0.7">
+            </a-entity>
+            
+            <a-entity geometry="primitive: plane; width: 20; height: 8" 
+                     position="-10 4 0"
+                     rotation="0 90 0"
+                     material="shader: standard; color: #252525; metalness: 0.1; roughness: 0.7">
+            </a-entity>
+            
+            <a-entity geometry="primitive: plane; width: 20; height: 8" 
+                     position="10 4 0"
+                     rotation="0 -90 0"
+                     material="shader: standard; color: #252525; metalness: 0.1; roughness: 0.7">
+            </a-entity>
+        </a-entity>
         
-        <div class="copyright">
-            <p>&copy; 2023 GPK ULTRA Collector's Hub. All rights reserved. Garbage Pail Kids is a trademark of The Topps Company.</p>
-        </div>
-    </footer>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.min.js"></script>
+        <!-- Enhanced Lighting System -->
+        <a-entity light="type: ambient; color: #666; intensity: 0.3"></a-entity>
+        
+        <!-- Main Directional Lights -->
+        <a-entity light="type: directional; color: #FFDE37; intensity: 1.0; castShadow: true; shadowMapWidth: 2048; shadowMapHeight: 2048; shadowCameraFar: 50" 
+                  position="-5 8 5" 
+                  rotation="-45 30 0">
+        </a-entity>
+        
+        <a-entity light="type: directional; color: #FF3E41; intensity: 0.6; castShadow: true; shadowMapWidth: 1024; shadowMapHeight: 1024" 
+                  position="5 7 -3" 
+                  rotation="-45 -45 0">
+        </a-entity>
+        
+        <!-- Accent Point Lights -->
+        <a-entity light="type: point; color: #ffde37; intensity: 2; distance: 10; decay: 2" position="-6 3 -7"></a-entity>
+        <a-entity light="type: point; color: #ff3e41; intensity: 2; distance: 10; decay: 2" position="6 3 -7"></a-entity>
+        <a-entity light="type: point; color: #2e86ab; intensity: 3; distance: 12; decay: 2" position="0 5 -5"></a-entity>
+        
+        <!-- Camera Rig -->
+        <a-entity id="camera-rig" position="0 1.6 2" 
+                  movement-controls="speed: 0.3; fly: false; constrainToNavMesh: false">
+            <a-entity camera="active: true; fov: 80; near: 0.1; far: 1000" 
+                     look-controls="pointerLockEnabled: true; touchEnabled: true; mouseEnabled: true"
+                     wasd-controls="acceleration: 50; fly: false">
+                <!-- Enhanced Cursor -->
+                <a-entity cursor="fuse: false; fuseTimeout: 500" 
+                          position="0 0 -1.5" 
+                          geometry="primitive: ring; radiusInner: 0.015; radiusOuter: 0.025" 
+                          material="color: #FFDE37; shader: flat; opacity: 0.9"
+                          animation__mouseenter="property: scale; from: 1 1 1; to: 1.3 1.3 1.3; dur: 200; startEvents: mouseenter"
+                          animation__mouseleave="property: scale; from: 1.3 1.3 1.3; to: 1 1 1; dur: 200; startEvents: mouseleave">
+                </a-entity>
+            </a-entity>
+        </a-entity>
+        
+        <!-- Interactive Screens - Row 1 -->
+        <a-entity id="screens-row1" layout="type: line; margin: 2" position="0 2.2 -9.8" rotation="0 0 0">
+            
+            <!-- Vintage Collection Screen -->
+            <a-entity class="screen" screen-type="vintage" width="3" height="2">
+                <a-plane material="shader: standard; src: #vintage-screen; metalness: 0.1; roughness: 0.3" 
+                         width="3" height="2"
+                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
+                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
+                </a-plane>
+                <a-text value="VINTAGE\nCOLLECTION" position="0 1.3 0.02" color="#FFDE37" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+                <a-text value="1985 Original Series" position="0 -1.3 0.02" color="#FFFFFF" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+            </a-entity>
+            
+            <!-- Modern Series Screen -->
+            <a-entity class="screen" screen-type="modern" width="3" height="2">
+                <a-plane material="shader: standard; src: #modern-screen; metalness: 0.1; roughness: 0.3" 
+                         width="3" height="2"
+                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
+                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
+                </a-plane>
+                <a-text value="MODERN\nSERIES" position="0 1.3 0.02" color="#FFDE37" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+                <a-text value="2020-Present Releases" position="0 -1.3 0.02" color="#FFFFFF" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+            </a-entity>
+            
+            <!-- Wacky Packages Screen -->
+            <a-entity class="screen" screen-type="wacky" width="3" height="2">
+                <a-plane material="shader: standard; src: #wacky-screen; metalness: 0.1; roughness: 0.3" 
+                         width="3" height="2"
+                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
+                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
+                </a-plane>
+                <a-text value="WACKY\nPACKAGES" position="0 1.3 0.02" color="#FFDE37" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+                <a-text value="Parody Sticker Art" position="0 -1.3 0.02" color="#FFFFFF" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+            </a-entity>
+        </a-entity>
+        
+        <!-- Interactive Screens - Row 2 -->
+        <a-entity id="screens-row2" layout="type: line; margin: 2" position="0 4.8 -9.8" rotation="0 0 0">
+            
+            <!-- Custom Cards Screen -->
+            <a-entity class="screen" screen-type="custom" width="3" height="2">
+                <a-plane material="shader: standard; src: #custom-screen; metalness: 0.1; roughness: 0.3" 
+                         width="3" height="2"
+                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
+                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
+                </a-plane>
+                <a-text value="CUSTOM\nCARDS" position="0 1.3 0.02" color="#FFDE37" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+                <a-text value="Fan Art Creations" position="0 -1.3 0.02" color="#FFFFFF" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+            </a-entity>
+            
+            <!-- Trading Hub Screen -->
+            <a-entity class="screen" screen-type="trading" width="3" height="2">
+                <a-plane material="shader: standard; src: #trading-screen; metalness: 0.1; roughness: 0.3" 
+                         width="3" height="2"
+                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
+                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
+                </a-plane>
+                <a-text value="TRADING\nHUB" position="0 1.3 0.02" color="#FFDE37" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+                <a-text value="Swap With Collectors" position="0 -1.3 0.02" color="#FFFFFF" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+            </a-entity>
+            
+            <!-- Virtual Pack Opening Screen -->
+            <a-entity class="screen" screen-type="pack-opening" width="3" height="2">
+                <a-plane material="shader: standard; src: #pack-screen; metalness: 0.1; roughness: 0.3" 
+                         width="3" height="2"
+                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
+                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
+                </a-plane>
+                <a-text value="VIRTUAL\nPACKS" position="0 1.3 0.02" color="#FFDE37" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+                <a-text value="Open Digital Packs" position="0 -1.3 0.02" color="#FFFFFF" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+            </a-entity>
+        </a-entity>
+        
+        <!-- GPK Logo on Wall -->
+        <a-image src="#gpk-logo" position="0 6.5 -9.8" width="4" height="2"
+                animation="property: position; to: 0 6.7 -9.8; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine">
+        </a-image>
+        
+        <!-- Display Cases with Cards -->
+        <a-entity position="-4 1.5 -2" rotation="0 45 0">
+            <a-box position="0 0.8 0" width="2" height="1.2" depth="1.5" 
+                   material="shader: standard; color: #333333; metalness: 0.8; roughness: 0.2">
+            </a-box>
+            <a-box position="0 2.2 0" width="2" height="2.8" depth="1.5" 
+                   material="shader: standard; color: #AAAAAA; opacity: 0.15; transparent: true; metalness: 0.9; roughness: 0.1">
+            </a-box>
+            <a-image src="#sample-card1" position="0 2.2 0.2" width="1.2" height="1.6" 
+                    class="display-card" clickable>
+            </a-image>
+            <a-text value="RARE CARD" position="0 3.8 0.2" color="#FFDE37" align="center" width="3"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+            </a-text>
+        </a-entity>
+        
+        <a-entity position="4 1.5 -2" rotation="0 -45 0">
+            <a-box position="0 0.8 0" width="2" height="1.2" depth="1.5" 
+                   material="shader: standard; color: #333333; metalness: 0.8; roughness: 0.2">
+            </a-box>
+            <a-box position="0 2.2 0" width="2" height="2.8" depth="1.5" 
+                   material="shader: standard; color: #AAAAAA; opacity: 0.15; transparent: true; metalness: 0.9; roughness: 0.1">
+            </a-box>
+            <a-image src="#sample-card2" position="0 2.2 0.2" width="1.2" height="1.6" 
+                    class="display-card" clickable>
+            </a-image>
+            <a-text value="LIMITED EDITION" position="0 3.8 0.2" color="#FFDE37" align="center" width="3"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+            </a-text>
+        </a-entity>
+        
+        <!-- Floating Cards Animation -->
+        <a-entity id="floating-cards">
+            <a-image src="#sample-card3" position="-3 3 -5" width="0.9" height="1.2" rotation="0 25 0"
+                    animation="property: position; to: -3 3.8 -5; dir: alternate; dur: 3500; loop: true; easing: easeInOutSine">
+            </a-image>
+            <a-image src="#sample-card4" position="3 2.5 -6" width="0.9" height="1.2" rotation="0 -25 10"
+                    animation="property: position; to: 3 3.3 -6; dir: alternate; dur: 3000; loop: true; easing: easeInOutSine">
+            </a-image>
+            <a-image src="#sample-card5" position="0 2.5 -4" width="0.9" height="1.2" rotation="0 0 -10"
+                    animation="property: position; to: 0 3.3 -4; dir: alternate; dur: 4000; loop: true; easing: easeInOutSine">
+            </a-image>
+        </a-entity>
+        
+        <!-- Audio -->
+        <a-entity sound="src: #ambient-sound; autoplay: true; loop: true; volume: 0.2"></a-entity>
+        
+        <!-- Assets -->
+        <a-assets timeout="30000">
+            <!-- Screen Content Images with Fallbacks -->
+            <img id="vintage-screen" src="https://m.media-amazon.com/images/I/71y-U5WxWEL._AC_UF1000,1000_QL80_.jpg"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22480%22%3E%3Crect width=%22800%22 height=%22480%22 fill=%22%23333%22/%3E%3Ctext x=%22400%22 y=%22240%22 fill=%22%23FFDE37%22 text-anchor=%22middle%22 font-size=%2220%22%3EVintage Collection%3C/text%3E%3C/svg%3E'">
+            
+            <img id="modern-screen" src="https://assets.fathead.com/2023/products/GPK23S2_hero.jpg"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22480%22%3E%3Crect width=%22800%22 height=%22480%22 fill=%22%23333%22/%3E%3Ctext x=%22400%22 y=%22240%22 fill=%22%23FFDE37%22 text-anchor=%22middle%22 font-size=%2220%22%3EModern Series%3C/text%3E%3C/svg%3E'">
+            
+            <img id="wacky-screen" src="https://assets.fathead.com/2023/products/WP23S1_hero.jpg"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22480%22%3E%3Crect width=%22800%22 height=%22480%22 fill=%22%23333%22/%3E%3Ctext x=%22400%22 y=%22240%22 fill=%22%23FFDE37%22 text-anchor=%22middle%22 font-size=%2220%22%3EWacky Packages%3C/text%3E%3C/svg%3E'">
+            
+            <img id="custom-screen" src="https://i.etsystatic.com/12367418/r/il/1c5c2e/5168888605/il_1140xN.5168888605_9v3x.jpg"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22480%22%3E%3Crect width=%22800%22 height=%22480%22 fill=%22%23333%22/%3E%3Ctext x=%22400%22 y=%22240%22 fill=%22%23FFDE37%22 text-anchor=%22middle%22 font-size=%2220%22%3ECustom Cards%3C/text%3E%3C/svg%3E'">
+            
+            <img id="trading-screen" src="https://www.cardboardconnection.com/wp-content/uploads/2023/03/garbage-pail-kids-trading-cards.jpg"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22480%22%3E%3Crect width=%22800%22 height=%22480%22 fill=%22%23333%22/%3E%3Ctext x=%22400%22 y=%22240%22 fill=%22%23FFDE37%22 text-anchor=%22middle%22 font-size=%2220%22%3ETrading Hub%3C/text%3E%3C/svg%3E'">
+            
+            <img id="pack-screen" src="https://www.cardboardconnection.com/wp-content/uploads/2023/03/garbage-pail-kids-2023-series-2-cards.jpg"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22480%22%3E%3Crect width=%22800%22 height=%22480%22 fill=%22%23333%22/%3E%3Ctext x=%22400%22 y=%22240%22 fill=%22%23FFDE37%22 text-anchor=%22middle%22 font-size=%2220%22%3EVirtual Packs%3C/text%3E%3C/svg%3E'">
+            
+            <!-- Logo -->
+            <img id="gpk-logo" src="https://upload.wikimedia.org/wikipedia/en/4/4f/Garbage_Pail_Kids_Logo.svg"
+                 onerror="this.onerror=null; this.style.display='none'">
+            
+            <!-- Sample Cards with Fallbacks -->
+            <img id="sample-card1" src="https://www.cardboardconnection.com/wp-content/uploads/2023/03/garbage-pail-kids-2023-series-2-cards.jpg"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22336%22%3E%3Crect width=%22240%22 height=%22336%22 fill=%22%23ff3e41%22/%3E%3Ctext x=%22120%22 y=%22168%22 fill=%22%23fff%22 text-anchor=%22middle%22%3ECard 1%3C/text%3E%3C/svg%3E'">
+            
+            <img id="sample-card2" src="https://m.media-amazon.com/images/I/71y-U5WxWEL._AC_UF1000,1000_QL80_.jpg"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22336%22%3E%3Crect width=%22240%22 height=%22336%22 fill=%22%23ffde37%22/%3E%3Ctext x=%22120%22 y=%22168%22 fill=%22%23000%22 text-anchor=%22middle%22%3ECard 2%3C/text%3E%3C/svg%3E'">
+            
+            <img id="sample-card3" src="https://assets.fathead.com/2023/products/GPK23S2_hero.jpg"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22336%22%3E%3Crect width=%22240%22 height=%22336%22 fill=%22%232e86ab%22/%3E%3Ctext x=%22120%22 y=%22168%22 fill=%22%23fff%22 text-anchor=%22middle%22%3ECard 3%3C/text%3E%3C/svg%3E'">
+            
+            <img id="sample-card4" src="https://assets.fathead.com/2023/products/WP23S1_hero.jpg"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22336%22%3E%3Crect width=%22240%22 height=%22336%22 fill=%22%23ff3e41%22/%3E%3Ctext x=%22120%22 y=%22168%22 fill=%22%23fff%22 text-anchor=%22middle%22%3ECard 4%3C/text%3E%3C/svg%3E'">
+            
+            <img id="sample-card5" src="https://i.etsystatic.com/12367418/r/il/1c5c2e/5168888605/il_1140xN.5168888605_9v3x.jpg"
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22336%22%3E%3Crect width=%22240%22 height=%22336%22 fill=%22%23ffde37%22/%3E%3Ctext x=%22120%22 y=%22168%22 fill=%22%23000%22 text-anchor=%22middle%22%3ECard 5%3C/text%3E%3C/svg%3E'">
+            
+            <!-- Audio Files -->
+            <audio id="ambient-sound" preload="auto" src="https://cdn.aframe.io/basic-guide/audio/backgroundnoise.wav"></audio>
+            <audio id="click-sound" preload="auto" src="https://cdn.aframe.io/basic-guide/audio/click.ogg"></audio>
+            <audio id="hover-sound" preload="auto" src="https://cdn.aframe.io/basic-guide/audio/hover.ogg"></audio>
+        </a-assets>
+    </a-scene>
+
     <script>
-        // Extended GPK Card Data (10 classic cards)
-        const gpkCards = [
-            {
-                id: 1,
-                title: "OS1 Custom Pack",
-                series: 1,
-                number: "",
-                year: 1985,
-                imageUrl: "PompaPaulie.png", // Changed to full URL
-                value: 125.00, // Added value
-                backImage: "20250428204923.png"
-            },
-            {
-                id: 2,
-                title: "OS2 Custom Wrapper",
-                series: 2,
-                number: "",
-                year: 1985,
-                imageUrl: "os2_custom_wrapper.jpg", // Changed to full URL
-                value: 85.50, // Added value
-                backImage: "https://i.imgur.com/5X5w0Wq.png"
-            },
-            {
-                id: 3,
-                title: "OS3 Custom Wrapper",
-                series: 3,
-                number: "",
-                year: 1986,
-                imageUrl: "os3_custom_wrapper.jpg", // Changed to full URL
-                value: 65.00, // Added value
-                backImage: "https://i.imgur.com/5X5w0Wq.png"
-            },
-            {
-                id: 4,
-                title: "OS4 Custom Wrapper",
-                series: 4,
-                number: "",
-                year: 1986,
-                imageUrl: "os4_custom_wrapper.jpg", // Changed to full URL
-                value: 150.00, // Added value
-                backImage: "https://i.imgur.com/5X5w0Wq.png"
-            },
-            {
-                id: 5,
-                title: "OS5 Custom Wrapper",
-                series: 5,
-                number: "",
-                year: 1986,
-                imageUrl: "os5_custom_wrapper.jpg", // Changed to full URL
-                value: 75.00, // Added value
-                backImage: "https://i.imgur.com/5X5w0Wq.png"
-            },
-            {
-                id: 6,
-                title: "OS6 Custom Wrapper",
-                series: 6,
-                number: "",
-                year: 1986,
-                imageUrl: "Os6_custom_wrapper.png", // Changed to full URL
-                value: 95.00, // Added value
-                backImage: "https://i.imgur.com/5X5w0Wq.png"
-            },
-            {
-                id: 7,
-                title: "OS7 Custom Wrapper",
-                series: 7,
-                number: "",
-                year: 1986,
-                imageUrl: "OS7_customWrapper.png", // Changed to full URL
-                value: 110.00, // Added value
-                backImage: "https://i.imgur.com/5X5w0Wq.png"
-            },
+        // Main Application Controller
+        (function() {
+            'use strict';
             
-                
-            {
-                id: 9,
-                title: "OS9 Custom Wrapper",
-                series: 9,
-                number: "",
-                year: 1987,
-                imageUrl: "Series9_customWrapper.png", // Changed to full URL
-                value: 70.00, // Added value
-                backImage: "https://i.imgur.com/5X5w0Wq.png"
-            },
-            {
-                id: 10,
-                title: "OS10 Custom Wrapper",
-                series: 10,
-                number: "",
-                year: 1987,
-                imageUrl: "Os10_custom_wrapper.png", // Changed to full URL
-                value: 90.00, // Added value
-                backImage: "https://i.imgur.com/5X5w0Wq.png"
-            }
-        ];
-        
-        // DOM Elements
-        const cardGrid = document.getElementById('cardGrid');
-        const webglContainer = document.getElementById('webgl-container');
-        const webglClose = document.getElementById('webgl-close');
-        const cartCount = document.querySelector('.cart-count');
-        
-        // Three.js Variables
-        let scene, camera, renderer, cardMesh;
-        
-        // Initialize the card grid
-        function initCardGrid() {
-            cardGrid.innerHTML = '';
+            // DOM Elements
+            const loadingScreen = document.getElementById('loading-screen');
+            const progressBar = document.getElementById('progress-bar');
+            const loadingText = document.getElementById('loading-text');
+            const screenInfo = document.getElementById('screen-info');
+            const screenTitle = document.getElementById('screen-title');
+            const screenDescription = document.getElementById('screen-description');
+            const screenHotkeys = document.getElementById('screen-hotkeys');
+            const vrIndicator = document.getElementById('vr-indicator');
+            const scene = document.querySelector('a-scene');
             
-            gpkCards.forEach(card => {
-                const cardElement = document.createElement('div');
-                cardElement.className = 'card-container';
-                cardElement.innerHTML = `
-                    <div class="card-face card-front">
-                        <div class="card-image" style="background-image: url('${card.imageUrl}')"></div>
-                        <div class="card-info">
-                            <h3 class="card-title">${card.title}</h3>
-                            <p>Series ${card.series} • ${card.number} • $${card.value.toFixed(2)}</p>
-                        </div>
-                    </div>
-                    <div class="card-face card-back">
-                        <div class="card-image" style="background-image: url('${card.backImage}')"></div>
-                    </div>
-                `;
+            // Loading System with Real Asset Tracking
+            function initLoadingSystem() {
+                let progress = 0;
+                const totalAssets = 15; // Approximate number of assets to load
+                let loadedAssets = 0;
                 
-                cardElement.addEventListener('click', () => {
-                    cardElement.classList.toggle('flipped');
-                    // Open WebGL viewer on double click
-                    setTimeout(() => {
-                        if(cardElement.classList.contains('flipped')) {
-                            initWebGLViewer(card);
-                        }
-                    }, 400);
+                // Track actual asset loading
+                const assetElements = document.querySelectorAll('a-assets img, a-assets audio');
+                assetElements.forEach(asset => {
+                    asset.addEventListener('load', () => {
+                        loadedAssets++;
+                        updateProgress();
+                    });
+                    
+                    asset.addEventListener('error', () => {
+                        loadedAssets++; // Count errors as loaded (using fallback)
+                        updateProgress();
+                    });
                 });
                 
-                cardGrid.appendChild(cardElement);
-            });
-        }
-        
-        // Initialize WebGL Viewer
-        function initWebGLViewer(card) {
-            webglContainer.style.display = 'flex';
-            
-            // Set up Three.js scene
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({ 
-                canvas: document.getElementById('webgl-canvas'), 
-                antialias: true,
-                preserveDrawingBuffer: true // Helps with texture loading
-            });
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            
-            // Add lights
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-            scene.add(ambientLight);
-            
-            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight.position.set(1, 1, 1);
-            scene.add(directionalLight);
-            
-            // Create card geometry
-            const geometry = new THREE.PlaneGeometry(3, 4);
-            
-            // Load texture with error handling
-            const textureLoader = new THREE.TextureLoader();
-            textureLoader.load(
-                card.imageUrl,
-                (texture) => {
-                    const material = new THREE.MeshStandardMaterial({
-                        map: texture,
-                        roughness: 0.3,
-                        metalness: 0.1
-                    });
-                    
-                    if (cardMesh) {
-                        scene.remove(cardMesh);
+                // Fallback progress simulation
+                const fallbackInterval = setInterval(() => {
+                    if (loadedAssets < totalAssets) {
+                        progress = Math.min(90, (loadedAssets / totalAssets) * 100);
+                        updateProgressBar();
                     }
+                }, 200);
+                
+                function updateProgress() {
+                    progress = Math.min(100, (loadedAssets / totalAssets) * 100);
+                    updateProgressBar();
                     
-                    cardMesh = new THREE.Mesh(geometry, material);
-                    scene.add(cardMesh);
+                    if (loadedAssets >= totalAssets) {
+                        clearInterval(fallbackInterval);
+                    }
+                }
+                
+                function updateProgressBar() {
+                    progressBar.style.width = `${progress}%`;
+                    
+                    if (progress < 40) {
+                        loadingText.textContent = "LOADING 3D ASSETS...";
+                    } else if (progress < 75) {
+                        loadingText.textContent = "PREPARING ENVIRONMENT...";
+                    } else if (progress < 100) {
+                        loadingText.textContent = "FINALIZING EXPERIENCE...";
+                    } else {
+                        loadingText.textContent = "WELCOME TO GPK ULTRA 3D!";
+                    }
+                }
+                
+                // Minimum loading time for UX
+                setTimeout(() => {
+                    if (progress >= 100) {
+                        hideLoadingScreen();
+                    } else {
+                        // Force complete after 5 seconds max
+                        progress = 100;
+                        updateProgressBar();
+                        setTimeout(hideLoadingScreen, 500);
+                    }
+                }, 3000);
+            }
+            
+            function hideLoadingScreen() {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    initExperience();
+                }, 800);
+            }
+            
+            // Initialize Experience After Loading
+            function initExperience() {
+                setupScreenInteractions();
+                setupNavigationControls();
+                setupVRDetection();
+                setupMobileDetection();
+            }
+            
+            // Screen Data Configuration
+            const screenData = {
+                vintage: {
+                    title: "VINTAGE COLLECTION",
+                    description: "Explore original 1985 GPK cards in immersive 3D with interactive zoom and rotation",
+                    link: "vintage.html",
+                    hotkeys: ["Click: Enter", "E: Zoom", "R: Rotate"]
                 },
-                undefined, // Progress callback (optional)
-                (error) => {
-                    console.error('Error loading texture:', error);
-                    // Fallback to a default material if texture fails to load
-                    const material = new THREE.MeshStandardMaterial({
-                        color: 0xffffff,
-                        roughness: 0.3,
-                        metalness: 0.1
+                modern: {
+                    title: "MODERN SERIES",
+                    description: "View and interact with the latest GPK card releases in high detail",
+                    link: "modern.html",
+                    hotkeys: ["Click: Enter", "E: Zoom", "R: Rotate"]
+                },
+                wacky: {
+                    title: "WACKY PACKAGES",
+                    description: "Interactive parody sticker collection with animation effects",
+                    link: "wacky.html",
+                    hotkeys: ["Click: Enter", "E: Zoom", "R: Rotate"]
+                },
+                custom: {
+                    title: "CUSTOM CARDS",
+                    description: "Browse and rate fan-created GPK artwork in 3D gallery mode",
+                    link: "custom.html",
+                    hotkeys: ["Click: Enter", "E: Zoom", "R: Rotate"]
+                },
+                trading: {
+                    title: "TRADING HUB",
+                    description: "Connect with other collectors in real-time virtual trading environment",
+                    link: "trading.html",
+                    hotkeys: ["Click: Enter", "E: Zoom", "R: Rotate"]
+                },
+                "pack-opening": {
+                    title: "VIRTUAL PACKS",
+                    description: "Open digital GPK packs with realistic physics and animations",
+                    link: "packs.html",
+                    hotkeys: ["Click: Enter", "E: Zoom", "R: Rotate"]
+                }
+            };
+            
+            // Screen Interactions
+            function setupScreenInteractions() {
+                const screens = document.querySelectorAll('.screen');
+                
+                screens.forEach(screen => {
+                    const screenType = screen.getAttribute('screen-type');
+                    const screenPlane = screen.querySelector('a-plane');
+                    
+                    // Mouse Enter
+                    screen.addEventListener('mouseenter', () => {
+                        const data = screenData[screenType];
+                        if (!data) return;
+                        
+                        screenTitle.textContent = data.title;
+                        screenDescription.textContent = data.description;
+                        
+                        // Render hotkeys
+                        screenHotkeys.innerHTML = data.hotkeys.map(key => 
+                            `<span>${key}</span>`
+                        ).join('');
+                        
+                        screenInfo.classList.add('active');
+                        
+                        // Play hover sound
+                        playSound('hover-sound', 0.2);
                     });
                     
-                    if (cardMesh) {
-                        scene.remove(cardMesh);
-                    }
+                    // Mouse Leave
+                    screen.addEventListener('mouseleave', () => {
+                        screenInfo.classList.remove('active');
+                    });
                     
-                    cardMesh = new THREE.Mesh(geometry, material);
-                    scene.add(cardMesh);
+                    // Click
+                    screen.addEventListener('click', () => {
+                        const data = screenData[screenType];
+                        if (!data) return;
+                        
+                        // Visual feedback
+                        screenPlane.setAttribute('material', 'emissive', '#FFDE37');
+                        screenPlane.setAttribute('material', 'emissiveIntensity', '0.5');
+                        
+                        // Play click sound
+                        playSound('click-sound', 0.4);
+                        
+                        // Show navigation message
+                        screenDescription.textContent = `Loading ${data.title} experience...`;
+                        
+                        setTimeout(() => {
+                            screenPlane.setAttribute('material', 'emissive', '#000000');
+                            screenPlane.setAttribute('material', 'emissiveIntensity', '0');
+                            
+                            // Navigate (in production)
+                            console.log(`Navigating to: ${data.link}`);
+                            // window.location.href = data.link;
+                            
+                            setTimeout(() => {
+                                screenInfo.classList.remove('active');
+                            }, 1500);
+                        }, 300);
+                    });
+                });
+            }
+            
+            // Navigation Controls
+            function setupNavigationControls() {
+                const resetBtn = document.getElementById('reset-view');
+                const vrBtn = document.getElementById('vr-btn');
+                const helpBtn = document.getElementById('help-btn');
+                const fullscreenBtn = document.getElementById('fullscreen-btn');
+                const cameraRig = document.getElementById('camera-rig');
+                
+                // Reset View
+                resetBtn.addEventListener('click', () => {
+                    cameraRig.setAttribute('position', '0 1.6 2');
+                    cameraRig.setAttribute('rotation', '0 0 0');
+                    playSound('click-sound', 0.3);
+                });
+                
+                // VR Mode Toggle
+                vrBtn.addEventListener('click', () => {
+                    if (AFRAME.utils.device.checkHeadsetConnected()) {
+                        if (scene.is('vr-mode')) {
+                            scene.exitVR();
+                        } else {
+                            scene.enterVR();
+                        }
+                    } else {
+                        showInfo('VR HEADSET REQUIRED', 'Connect a VR headset for full immersion experience.');
+                    }
+                });
+                
+                // Help
+                helpBtn.addEventListener('click', () => {
+                    screenTitle.textContent = "GPK ULTRA 3D CONTROLS";
+                    screenDescription.textContent = "Mouse: Look | WASD: Move | Click Screens: Enter | ESC: Exit";
+                    screenHotkeys.innerHTML = '<span>Mouse</span><span>WASD</span><span>Click</span><span>ESC</span>';
+                    screenInfo.classList.add('active');
+                    
+                    setTimeout(() => {
+                        screenInfo.classList.remove('active');
+                    }, 4000);
+                });
+                
+                // Fullscreen
+                fullscreenBtn.addEventListener('click', () => {
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    } else {
+                        document.documentElement.requestFullscreen();
+                    }
+                });
+            }
+            
+            // VR Detection
+            function setupVRDetection() {
+                scene.addEventListener('enter-vr', () => {
+                    vrIndicator.classList.add('active');
+                });
+                
+                scene.addEventListener('exit-vr', () => {
+                    vrIndicator.classList.remove('active');
+                });
+            }
+            
+            // Mobile Detection
+            function setupMobileDetection() {
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                    const mobileWarning = document.getElementById('mobile-warning');
+                    mobileWarning.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        mobileWarning.style.display = 'none';
+                    }, 3000);
                 }
-            );
-            
-            camera.position.z = 5;
-            
-            // Add controls
-            const controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableZoom = true;
-            controls.enablePan = false;
-            
-            // Animation loop
-            function animate() {
-                requestAnimationFrame(animate);
-                controls.update();
-                renderer.render(scene, camera);
             }
             
-            animate();
-            
-            // Handle window resize
-            function handleResize() {
-                camera.aspect = window.innerWidth / window.innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(window.innerWidth, window.innerHeight);
-            }
-            
-            window.addEventListener('resize', handleResize);
-            
-            // Clean up event listener when viewer is closed
-            webglClose.addEventListener('click', () => {
-                window.removeEventListener('resize', handleResize);
-                webglContainer.style.display = 'none';
-                if(renderer) {
-                    renderer.dispose();
+            // Utility: Play Sound
+            function playSound(soundId, volume = 0.5) {
+                const soundEl = document.getElementById(soundId);
+                if (soundEl) {
+                    const clone = soundEl.cloneNode();
+                    clone.volume = volume;
+                    clone.play().catch(() => {
+                        // Autoplay blocked, ignore
+                    });
                 }
-            }, { once: true });
-        }
-        
-        // Close WebGL Viewer
-        webglClose.addEventListener('click', () => {
-            webglContainer.style.display = 'none';
-            // Clean up Three.js
-            if(renderer) {
-                renderer.dispose();
             }
-        });
-        
-        // Initialize cart counter
-        let cartItems = 0;
-        
-        // Sample add to cart functionality
-        function addToCart(cardId) {
-            cartItems++;
-            cartCount.textContent = cartItems;
-            // Add actual cart logic here
-        }
-        
-        // Initialize the app
-        initCardGrid();
+            
+            // Utility: Show Info Panel
+            function showInfo(title, description) {
+                screenTitle.textContent = title;
+                screenDescription.textContent = description;
+                screenInfo.classList.add('active');
+                
+                setTimeout(() => {
+                    screenInfo.classList.remove('active');
+                }, 3000);
+            }
+            
+            // Register Custom Component: Clickable
+            AFRAME.registerComponent('clickable', {
+                init: function() {
+                    this.el.addEventListener('click', () => {
+                        playSound('click-sound', 0.3);
+                        
+                        const cardName = this.el.getAttribute('src') || 'Card';
+                        showInfo('CARD DETAILS', 'Click to view this card in the collection');
+                    });
+                }
+            });
+            
+            // Initialize loading when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initLoadingSystem);
+            } else {
+                initLoadingSystem();
+            }
+            
+            // Scene ready event
+            scene.addEventListener('loaded', () => {
+                console.log('GPK Ultra 3D scene loaded successfully');
+            });
+            
+        })();
     </script>
 </body>
 </html>
