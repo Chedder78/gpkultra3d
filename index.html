@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>GPK ULTRA 3D | Immersive Collector's Hub</title>
-    
-    <!-- Preload critical resources -->
-    <link rel="preload" href="https://aframe.io/releases/1.5.0/aframe.min.js" as="script">
-    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" as="style">
+    <title>GPK ULTRA 3D | Mobile AR Experience</title>
     
     <!-- WebXR and PWA meta tags -->
     <meta name="theme-color" content="#1a1a1a">
@@ -15,18 +11,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="GPK Ultra 3D">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="msapplication-TileColor" content="#1a1a1a">
-    <meta name="description" content="GPK Ultra 3D - Mobile-optimized Garbage Pail Kids Collector's Experience">
+    <meta name="description" content="GPK Ultra 3D - Physical Mobile VR Experience">
     
     <!-- A-Frame Core -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     
-    <!-- A-Frame Components -->
+    <!-- Essential Components -->
     <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
     <script src="https://unpkg.com/aframe-layout-component@5.3.0/dist/aframe-layout-component.min.js"></script>
     <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
     
     <style>
         :root {
@@ -44,180 +37,123 @@
         }
         
         body {
-            font-family: 'Bangers', 'Comic Sans MS', cursive, sans-serif;
-            background-color: var(--gpk-black);
-            color: white;
+            background: #000;
             overflow: hidden;
+            position: fixed;
             width: 100vw;
             height: 100vh;
-            position: fixed;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
-            touch-action: manipulation;
+            font-family: 'Bangers', cursive, sans-serif;
         }
 
-        /* Loading Screen */
+        /* Minimal Loading */
         #loading-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+            background: #000;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            transition: opacity 0.8s ease-out;
+            transition: opacity 0.5s ease;
         }
         
         .loading-spinner {
-            width: 60px;
-            height: 60px;
-            border: 4px solid rgba(255, 255, 255, 0.1);
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255,255,255,0.1);
             border-radius: 50%;
             border-top-color: var(--gpk-yellow);
-            border-right-color: var(--gpk-red);
-            animation: spin 1.2s linear infinite;
+            animation: spin 1s linear infinite;
         }
         
         .loading-text {
+            color: var(--gpk-yellow);
             margin-top: 1rem;
             font-size: 1.2rem;
-            text-shadow: 0 0 15px var(--gpk-yellow);
             letter-spacing: 2px;
         }
 
-        /* Mobile Controls Overlay */
-        #mobile-controls {
+        /* Proximity Info - Shows when near interactive elements */
+        #proximity-indicator {
             position: fixed;
-            bottom: 20px;
+            bottom: 40px;
             left: 50%;
             transform: translateX(-50%);
-            z-index: 1000;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-        
-        .mobile-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(26, 26, 26, 0.9);
+            background: rgba(0,0,0,0.8);
             border: 2px solid var(--gpk-yellow);
-            color: white;
-            font-size: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            transition: all 0.2s ease;
-            -webkit-tap-highlight-color: transparent;
-            touch-action: manipulation;
-        }
-        
-        .mobile-btn:active {
-            background: var(--gpk-yellow);
-            color: var(--gpk-black);
-            transform: scale(0.95);
-        }
-        
-        .mobile-btn.vr-btn {
-            width: 60px;
-            height: 60px;
-            font-size: 1.8rem;
-            background: var(--gpk-red);
-            border-color: var(--gpk-red);
-            animation: pulse 2s infinite;
-        }
-        
-        .joystick-area {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            width: 120px;
-            height: 120px;
-            background: rgba(26, 26, 26, 0.5);
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            z-index: 1000;
-            touch-action: manipulation;
-        }
-
-        /* VR Mode Button */
-        #enter-vr-btn {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10000;
-            background: var(--gpk-red);
-            color: white;
-            border: 3px solid var(--gpk-yellow);
-            padding: 20px 40px;
-            border-radius: 30px;
-            font-family: 'Bangers', cursive;
-            font-size: 1.5rem;
-            cursor: pointer;
-            display: none;
-            text-shadow: 2px 2px 0 rgba(0,0,0,0.5);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-            animation: pulse 2s infinite;
-        }
-        
-        #enter-vr-btn.show {
-            display: block;
-        }
-
-        /* Screen Info Panel */
-        .screen-info {
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(26, 26, 26, 0.95);
-            padding: 15px 25px;
+            color: var(--gpk-yellow);
+            padding: 10px 20px;
             border-radius: 20px;
-            border: 2px solid var(--gpk-yellow);
-            z-index: 999;
+            z-index: 1000;
             display: none;
+            text-align: center;
+            font-size: 1rem;
             backdrop-filter: blur(10px);
             -webkit-backdrop-filter: blur(10px);
-            max-width: 90vw;
-            text-align: center;
+            animation: pulse 2s infinite;
         }
         
-        .screen-info.active {
+        #proximity-indicator.active {
             display: block;
-            animation: slideUp 0.3s ease;
         }
 
-        /* Orientation Warning */
-        #orientation-warning {
+        /* Tap to Start Overlay */
+        #start-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10001;
-            flex-direction: column;
+            z-index: 10000;
+            transition: opacity 0.3s ease;
         }
         
-        #orientation-warning.show {
-            display: flex;
+        #start-overlay h1 {
+            color: var(--gpk-yellow);
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            text-shadow: 3px 3px 0 var(--gpk-red);
         }
         
-        #orientation-warning .rotate-icon {
-            font-size: 4rem;
-            animation: rotate 2s ease-in-out infinite;
+        #start-overlay p {
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            opacity: 0.8;
+        }
+        
+        #start-btn {
+            background: var(--gpk-red);
+            color: white;
+            border: 3px solid var(--gpk-yellow);
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-family: 'Bangers', cursive;
+            font-size: 1.5rem;
+            cursor: pointer;
+            letter-spacing: 2px;
+        }
+
+        /* Orientation Hint */
+        #orientation-hint {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255,255,255,0.6);
+            z-index: 1000;
+            font-size: 0.8rem;
+            display: none;
         }
 
         @keyframes spin {
@@ -225,279 +161,210 @@
         }
         
         @keyframes pulse {
-            0%, 100% { opacity: 0.8; }
+            0%, 100% { opacity: 0.6; }
             50% { opacity: 1; }
-        }
-        
-        @keyframes slideUp {
-            from {
-                opacity: 0;
-                transform: translateX(-50%) translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(-50%) translateY(0);
-            }
-        }
-        
-        @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            50% { transform: rotate(90deg); }
-            100% { transform: rotate(0deg); }
-        }
-
-        @media (max-width: 768px) {
-            .mobile-btn {
-                width: 44px;
-                height: 44px;
-                font-size: 1.3rem;
-            }
-            
-            .mobile-btn.vr-btn {
-                width: 54px;
-                height: 54px;
-                font-size: 1.6rem;
-            }
-            
-            .joystick-area {
-                width: 100px;
-                height: 100px;
-                bottom: 15px;
-                left: 15px;
-            }
         }
     </style>
     <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Loading Screen -->
+    <!-- Loading -->
     <div id="loading-screen">
         <div class="loading-spinner"></div>
-        <div class="loading-text">LOADING GPK ULTRA 3D...</div>
+        <div class="loading-text">GPK ULTRA 3D</div>
     </div>
 
-    <!-- Orientation Warning -->
-    <div id="orientation-warning">
-        <div class="rotate-icon">📱</div>
-        <h2 style="color: var(--gpk-yellow); margin-top: 20px;">PLEASE ROTATE YOUR DEVICE</h2>
-        <p style="margin-top: 10px; opacity: 0.8;">Landscape mode recommended for best experience</p>
+    <!-- Start Overlay -->
+    <div id="start-overlay">
+        <h1>GPK ULTRA 3D</h1>
+        <p>📱 Hold your phone up<br>🔄 Look around by moving<br>🚶 Walk to explore<br>👆 Tap to interact</p>
+        <button id="start-btn">ENTER EXPERIENCE</button>
     </div>
 
-    <!-- Enter VR Button -->
-    <button id="enter-vr-btn">🥽 ENTER VR MODE</button>
-
-    <!-- Screen Info Panel -->
-    <div id="screen-info" class="screen-info">
-        <h3 id="screen-title" style="color: var(--gpk-yellow);"></h3>
-        <p id="screen-description"></p>
+    <!-- Proximity Indicator -->
+    <div id="proximity-indicator">
+        <span id="proximity-text">Walk closer to interact</span>
     </div>
 
-    <!-- Mobile Controls -->
-    <div id="mobile-controls">
-        <button class="mobile-btn" id="look-up">↑</button>
-        <button class="mobile-btn" id="move-forward">▲</button>
-        <button class="mobile-btn" id="look-right">→</button>
-        <button class="mobile-btn vr-btn" id="mobile-vr-btn">👓</button>
-        <button class="mobile-btn" id="move-backward">▼</button>
-        <button class="mobile-btn" id="look-left">←</button>
-        <button class="mobile-btn" id="look-down">↓</button>
-    </div>
+    <!-- Orientation Hint -->
+    <div id="orientation-hint">↔️ Rotate phone to landscape</div>
 
-    <!-- Virtual Joystick Area -->
-    <div class="joystick-area" id="joystick-area"></div>
-
-    <!-- A-Frame Scene with Mobile-Optimized Settings -->
+    <!-- A-Frame Scene - Pure Mobile VR -->
     <a-scene 
-        renderer="colorManagement: true; antialias: true; precision: medium; alpha: false"
+        renderer="colorManagement: true; antialias: false; precision: low; alpha: false; logarithmicDepthBuffer: true"
         background="color: #1a1a1a"
-        vr-mode-ui="enabled: true; cardboardModeEnabled: true"
+        vr-mode-ui="enabled: false"
         device-orientation-permission-ui="enabled: true"
-        ar-mode-ui="enabled: true"
         embedded
     >
-        <!-- Room Environment -->
-        <a-entity geometry="primitive: box; width: 20; height: 8; depth: 20"
-                 material="shader: standard; color: #2a2a2a; metalness: 0.1; roughness: 0.8; side: back"
-                 position="0 4 0">
+        <!-- Main Environment - Scaled for walking exploration -->
+        <a-entity geometry="primitive: box; width: 30; height: 6; depth: 30"
+                 material="shader: standard; color: #2a2a2a; side: back"
+                 position="0 3 0">
         </a-entity>
         
-        <!-- Floor -->
-        <a-entity geometry="primitive: plane; width: 20; height: 20"
+        <!-- Floor with Grid Pattern for Spatial Awareness -->
+        <a-entity geometry="primitive: plane; width: 30; height: 30"
                  rotation="-90 0 0"
-                 material="shader: standard; color: #1a1a1a; metalness: 0.2; roughness: 0.5">
+                 position="0 0 0"
+                 material="shader: standard; color: #1a1a1a; metalness: 0.1; roughness: 0.6">
         </a-entity>
         
-        <!-- Ceiling -->
-        <a-entity geometry="primitive: plane; width: 20; height: 20"
-                 rotation="90 0 0"
-                 position="0 8 0"
-                 material="shader: standard; color: #151515; metalness: 0.05; roughness: 0.9">
-        </a-entity>
-        
-        <!-- Walls -->
-        <a-entity geometry="primitive: plane; width: 20; height: 8"
-                 position="0 4 -10"
-                 material="shader: standard; color: #252525">
-        </a-entity>
-        
-        <a-entity geometry="primitive: plane; width: 20; height: 8"
-                 position="-10 4 0"
-                 rotation="0 90 0"
-                 material="shader: standard; color: #252525">
-        </a-entity>
-        
-        <a-entity geometry="primitive: plane; width: 20; height: 8"
-                 position="10 4 0"
-                 rotation="0 -90 0"
-                 material="shader: standard; color: #252525">
+        <!-- Floor Grid Lines for Depth Perception -->
+        <a-entity position="0 0.01 0">
+            <!-- Grid lines every 2 meters -->
+            <a-entity geometry="primitive: plane; width: 30; height: 0.05"
+                     rotation="-90 0 0"
+                     position="0 0.01 -4"
+                     material="shader: standard; color: #333; emissive: #333; emissiveIntensity: 0.5">
+            </a-entity>
+            <a-entity geometry="primitive: plane; width: 30; height: 0.05"
+                     rotation="-90 0 0"
+                     position="0 0.01 0"
+                     material="shader: standard; color: #333; emissive: #333; emissiveIntensity: 0.5">
+            </a-entity>
+            <a-entity geometry="primitive: plane; width: 30; height: 0.05"
+                     rotation="-90 0 0"
+                     position="0 0.01 4"
+                     material="shader: standard; color: #333; emissive: #333; emissiveIntensity: 0.5">
+            </a-entity>
         </a-entity>
         
         <!-- Lighting -->
-        <a-entity light="type: ambient; color: #666; intensity: 0.6"></a-entity>
-        <a-entity light="type: directional; color: #FFDE37; intensity: 0.8" position="-5 8 5"></a-entity>
-        <a-entity light="type: point; color: #ffde37; intensity: 2; distance: 15" position="0 5 -5"></a-entity>
+        <a-entity light="type: ambient; color: #666; intensity: 0.8"></a-entity>
+        <a-entity light="type: directional; color: #FFDE37; intensity: 1.0" position="-5 5 0"></a-entity>
+        <a-entity light="type: point; color: #ffde37; intensity: 2; distance: 20" position="0 4 -5"></a-entity>
         
-        <!-- Mobile-Optimized Camera Rig -->
-        <a-entity id="camera-rig" position="0 1.6 2">
-            <!-- Desktop Camera -->
-            <a-entity camera="active: true; fov: 80; near: 0.1; far: 100"
-                     look-controls="pointerLockEnabled: true; touchEnabled: true; magicWindowTrackingEnabled: true; reverseMouseDrag: true"
-                     wasd-controls="acceleration: 50; fly: false"
-                     id="main-camera">
-                <a-entity cursor="fuse: false; fuseTimeout: 500"
-                         position="0 0 -1.5"
-                         geometry="primitive: ring; radiusInner: 0.015; radiusOuter: 0.025"
-                         material="color: #FFDE37; shader: flat">
-                </a-entity>
-            </a-entity>
-            
-            <!-- Mobile Touch Camera -->
-            <a-entity camera="active: false; fov: 70; near: 0.1; far: 100"
-                     id="mobile-camera"
-                     look-controls="magicWindowTrackingEnabled: true; touchEnabled: true; reverseMouseDrag: true">
-                <a-entity cursor="fuse: true; fuseTimeout: 1500"
-                         position="0 0 -1.5"
-                         geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
-                         material="color: #FFDE37; shader: flat">
-                </a-entity>
+        <!-- Mobile Camera - Device Orientation Only, No Controls -->
+        <a-entity camera="active: true; fov: 70; near: 0.1; far: 50"
+                 look-controls="magicWindowTrackingEnabled: true; touchEnabled: false; mouseEnabled: false"
+                 wasd-controls-enabled="false"
+                 id="mobile-camera"
+                 position="0 1.6 3">
+            <!-- Simple Gaze Cursor -->
+            <a-entity cursor="fuse: true; fuseTimeout: 1000"
+                     position="0 0 -1"
+                     geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02"
+                     material="color: #FFDE37; shader: flat; opacity: 0.8">
             </a-entity>
         </a-entity>
         
-        <!-- Interactive Screens - Row 1 -->
-        <a-entity id="screens-row1" layout="type: line; margin: 1.5" position="0 2.2 -9.5" rotation="0 0 0">
-            
-            <!-- Vintage Collection Screen -->
-            <a-entity class="screen" screen-type="vintage" width="2.5" height="1.5">
-                <a-plane material="shader: standard; color: #333; metalness: 0.1; roughness: 0.3" 
-                         width="2.5" height="1.5"
-                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
-                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
-                </a-plane>
-                <a-text value="VINTAGE\nCOLLECTION" position="0 1.1 0.02" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-text value="1985 Original Series" position="0 -1.1 0.02" color="#FFFFFF" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-            </a-entity>
-            
-            <!-- Modern Series Screen -->
-            <a-entity class="screen" screen-type="modern" width="2.5" height="1.5">
-                <a-plane material="shader: standard; color: #333; metalness: 0.1; roughness: 0.3" 
-                         width="2.5" height="1.5"
-                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
-                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
-                </a-plane>
-                <a-text value="MODERN\nSERIES" position="0 1.1 0.02" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-text value="2020-Present" position="0 -1.1 0.02" color="#FFFFFF" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-            </a-entity>
-            
-            <!-- Wacky Packages Screen -->
-            <a-entity class="screen" screen-type="wacky" width="2.5" height="1.5">
-                <a-plane material="shader: standard; color: #333; metalness: 0.1; roughness: 0.3" 
-                         width="2.5" height="1.5"
-                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
-                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
-                </a-plane>
-                <a-text value="WACKY\nPACKAGES" position="0 1.1 0.02" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-text value="Parody Stickers" position="0 -1.1 0.02" color="#FFFFFF" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+        <!-- Interactive Zones - Positioned for walking exploration -->
+        
+        <!-- Zone 1: Vintage Collection (Left side, far) -->
+        <a-entity id="zone-vintage" class="interaction-zone" zone-type="vintage"
+                 position="-4 2 -6"
+                 geometry="primitive: box; width: 2; height: 2; depth: 0.2"
+                 material="shader: standard; color: #333; metalness: 0.2; roughness: 0.5; transparent: true; opacity: 0.9">
+            <a-text value="VINTAGE\nCOLLECTION" position="0 0.8 0.11" color="#FFDE37" align="center" width="2.5"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+            <a-text value="1985 Series" position="0 -0.8 0.11" color="#FFFFFF" align="center" width="2.5"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+            <!-- Proximity Glow -->
+            <a-entity geometry="primitive: box; width: 3; height: 3; depth: 0.3"
+                     position="0 0 -0.1"
+                     material="shader: standard; color: #FFDE37; transparent: true; opacity: 0.1; emissive: #FFDE37; emissiveIntensity: 0.2"
+                     class="proximity-glow">
             </a-entity>
         </a-entity>
         
-        <!-- Second Row of Screens -->
-        <a-entity id="screens-row2" layout="type: line; margin: 1.5" position="0 4.5 -9.5" rotation="0 0 0">
-            
-            <!-- Custom Cards Screen -->
-            <a-entity class="screen" screen-type="custom" width="2.5" height="1.5">
-                <a-plane material="shader: standard; color: #333; metalness: 0.1; roughness: 0.3" 
-                         width="2.5" height="1.5"
-                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
-                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
-                </a-plane>
-                <a-text value="CUSTOM\nCARDS" position="0 1.1 0.02" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-text value="Fan Creations" position="0 -1.1 0.02" color="#FFFFFF" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-            </a-entity>
-            
-            <!-- Trading Hub Screen -->
-            <a-entity class="screen" screen-type="trading" width="2.5" height="1.5">
-                <a-plane material="shader: standard; color: #333; metalness: 0.1; roughness: 0.3" 
-                         width="2.5" height="1.5"
-                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
-                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
-                </a-plane>
-                <a-text value="TRADING\nHUB" position="0 1.1 0.02" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-text value="Swap With Collectors" position="0 -1.1 0.02" color="#FFFFFF" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-            </a-entity>
-            
-            <!-- Virtual Pack Opening Screen -->
-            <a-entity class="screen" screen-type="pack-opening" width="2.5" height="1.5">
-                <a-plane material="shader: standard; color: #333; metalness: 0.1; roughness: 0.3" 
-                         width="2.5" height="1.5"
-                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
-                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
-                </a-plane>
-                <a-text value="VIRTUAL\nPACKS" position="0 1.1 0.02" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-text value="Open Digital Packs" position="0 -1.1 0.02" color="#FFFFFF" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+        <!-- Zone 2: Modern Series (Right side, far) -->
+        <a-entity id="zone-modern" class="interaction-zone" zone-type="modern"
+                 position="4 2 -6"
+                 geometry="primitive: box; width: 2; height: 2; depth: 0.2"
+                 material="shader: standard; color: #333; metalness: 0.2; roughness: 0.5; transparent: true; opacity: 0.9">
+            <a-text value="MODERN\nSERIES" position="0 0.8 0.11" color="#FFDE37" align="center" width="2.5"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+            <a-text value="2020-Present" position="0 -0.8 0.11" color="#FFFFFF" align="center" width="2.5"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+            <a-entity geometry="primitive: box; width: 3; height: 3; depth: 0.3"
+                     position="0 0 -0.1"
+                     material="shader: standard; color: #FFDE37; transparent: true; opacity: 0.1; emissive: #FFDE37; emissiveIntensity: 0.2"
+                     class="proximity-glow">
             </a-entity>
         </a-entity>
         
-        <!-- GPK Logo -->
-        <a-text value="GPK ULTRA 3D" position="0 7 -9.5" color="#FFDE37" align="center" width="6"
+        <!-- Zone 3: Wacky Packages (Center, far) -->
+        <a-entity id="zone-wacky" class="interaction-zone" zone-type="wacky"
+                 position="0 4 -6"
+                 geometry="primitive: box; width: 2; height: 2; depth: 0.2"
+                 material="shader: standard; color: #333; metalness: 0.2; roughness: 0.5; transparent: true; opacity: 0.9">
+            <a-text value="WACKY\nPACKAGES" position="0 0.8 0.11" color="#FFDE37" align="center" width="2.5"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+            <a-text value="Parody Stickers" position="0 -0.8 0.11" color="#FFFFFF" align="center" width="2.5"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+            <a-entity geometry="primitive: box; width: 3; height: 3; depth: 0.3"
+                     position="0 0 -0.1"
+                     material="shader: standard; color: #FFDE37; transparent: true; opacity: 0.1; emissive: #FFDE37; emissiveIntensity: 0.2"
+                     class="proximity-glow">
+            </a-entity>
+        </a-entity>
+        
+        <!-- Zone 4: Custom Cards (Left wall, close) -->
+        <a-entity id="zone-custom" class="interaction-zone" zone-type="custom"
+                 position="-8 2 -2"
+                 rotation="0 90 0"
+                 geometry="primitive: box; width: 2; height: 2; depth: 0.2"
+                 material="shader: standard; color: #333; metalness: 0.2; roughness: 0.5; transparent: true; opacity: 0.9">
+            <a-text value="CUSTOM\nCARDS" position="0 0.8 0.11" color="#FFDE37" align="center" width="2.5"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+            <a-text value="Fan Creations" position="0 -0.8 0.11" color="#FFFFFF" align="center" width="2.5"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+            <a-entity geometry="primitive: box; width: 3; height: 3; depth: 0.3"
+                     position="0 0 -0.1"
+                     material="shader: standard; color: #FFDE37; transparent: true; opacity: 0.1; emissive: #FFDE37; emissiveIntensity: 0.2"
+                     class="proximity-glow">
+            </a-entity>
+        </a-entity>
+        
+        <!-- Zone 5: Trading Hub (Right wall, close) -->
+        <a-entity id="zone-trading" class="interaction-zone" zone-type="trading"
+                 position="8 2 -2"
+                 rotation="0 -90 0"
+                 geometry="primitive: box; width: 2; height: 2; depth: 0.2"
+                 material="shader: standard; color: #333; metalness: 0.2; roughness: 0.5; transparent: true; opacity: 0.9">
+            <a-text value="TRADING\nHUB" position="0 0.8 0.11" color="#FFDE37" align="center" width="2.5"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+            <a-text value="Swap Cards" position="0 -0.8 0.11" color="#FFFFFF" align="center" width="2.5"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+            <a-entity geometry="primitive: box; width: 3; height: 3; depth: 0.3"
+                     position="0 0 -0.1"
+                     material="shader: standard; color: #FFDE37; transparent: true; opacity: 0.1; emissive: #FFDE37; emissiveIntensity: 0.2"
+                     class="proximity-glow">
+            </a-entity>
+        </a-entity>
+        
+        <!-- Zone 6: Virtual Packs (Back wall center) -->
+        <a-entity id="zone-packs" class="interaction-zone" zone-type="pack-opening"
+                 position="0 2 -9.5"
+                 geometry="primitive: box; width: 2; height: 2; depth: 0.2"
+                 material="shader: standard; color: #333; metalness: 0.2; roughness: 0.5; transparent: true; opacity: 0.9">
+            <a-text value="VIRTUAL\nPACKS" position="0 0.8 0.11" color="#FFDE37" align="center" width="2.5"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+            <a-text value="Open Packs" position="0 -0.8 0.11" color="#FFFFFF" align="center" width="2.5"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
+            <a-entity geometry="primitive: box; width: 3; height: 3; depth: 0.3"
+                     position="0 0 -0.1"
+                     material="shader: standard; color: #FFDE37; transparent: true; opacity: 0.1; emissive: #FFDE37; emissiveIntensity: 0.2"
+                     class="proximity-glow">
+            </a-entity>
+        </a-entity>
+        
+        <!-- Decorative Elements -->
+        <a-text value="GPK ULTRA 3D" position="0 5 -9.4" color="#FFDE37" align="center" width="6"
                 font="https://cdn.aframe.io/fonts/Roboto-msdf.json"
-                animation="property: position; to: 0 7.2 -9.5; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine">
+                animation="property: position; to: 0 5.2 -9.4; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine">
         </a-text>
         
-        <!-- Display Cases -->
-        <a-entity position="-4 1.5 -2" rotation="0 45 0">
-            <a-box position="0 0.8 0" width="1.8" height="1" depth="1.2" 
-                   material="shader: standard; color: #333; metalness: 0.7; roughness: 0.2">
-            </a-box>
-            <a-box position="0 2.2 0" width="1.8" height="2.8" depth="1.2" 
-                   material="shader: standard; color: #AAA; opacity: 0.15; transparent: true; metalness: 0.9; roughness: 0.1">
-            </a-box>
-            <a-text value="RARE CARD" position="0 3.8 0.2" color="#FFDE37" align="center" width="3"
-                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false">
-            </a-text>
+        <!-- Floor Markers for Navigation -->
+        <a-entity position="0 0.02 -3">
+            <a-circle radius="0.3" material="color: #FFDE37; emissive: #FFDE37; emissiveIntensity: 0.5"></a-circle>
         </a-entity>
-        
-        <a-entity position="4 1.5 -2" rotation="0 -45 0">
-            <a-box position="0 0.8 0" width="1.8" height="1" depth="1.2" 
-                   material="shader: standard; color: #333; metalness: 0.7; roughness: 0.2">
-            </a-box>
-            <a-box position="0 2.2 0" width="1.8" height="2.8" depth="1.2" 
-                   material="shader: standard; color: #AAA; opacity: 0.15; transparent: true; metalness: 0.9; roughness: 0.1">
-            </a-box>
-            <a-text value="LIMITED EDITION" position="0 3.8 0.2" color="#FFDE37" align="center" width="3"
-                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false">
-            </a-text>
+        <a-entity position="-4 0.02 -5">
+            <a-circle radius="0.3" material="color: #ff3e41; emissive: #ff3e41; emissiveIntensity: 0.5"></a-circle>
+        </a-entity>
+        <a-entity position="4 0.02 -5">
+            <a-circle radius="0.3" material="color: #ff3e41; emissive: #ff3e41; emissiveIntensity: 0.5"></a-circle>
         </a-entity>
     </a-scene>
 
@@ -505,292 +372,195 @@
         (function() {
             'use strict';
             
-            // Detect mobile device
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-            
-            // DOM Elements
+            // Elements
             const loadingScreen = document.getElementById('loading-screen');
+            const startOverlay = document.getElementById('start-overlay');
+            const startBtn = document.getElementById('start-btn');
+            const proximityIndicator = document.getElementById('proximity-indicator');
+            const proximityText = document.getElementById('proximity-text');
+            const orientationHint = document.getElementById('orientation-hint');
             const scene = document.querySelector('a-scene');
-            const enterVRBtn = document.getElementById('enter-vr-btn');
-            const mobileVRBtn = document.getElementById('mobile-vr-btn');
-            const screenInfo = document.getElementById('screen-info');
-            const orientationWarning = document.getElementById('orientation-warning');
+            const camera = document.getElementById('mobile-camera');
+            
+            // State
+            let isStarted = false;
+            let currentZone = null;
+            let proximityTimeout = null;
+            
+            // Zone Data
+            const zoneData = {
+                vintage: {
+                    name: "VINTAGE COLLECTION",
+                    description: "Original 1985 Series",
+                    link: "vintage.html",
+                    color: "#FFDE37"
+                },
+                modern: {
+                    name: "MODERN SERIES",
+                    description: "2020-Present Cards",
+                    link: "modern.html",
+                    color: "#ff3e41"
+                },
+                wacky: {
+                    name: "WACKY PACKAGES",
+                    description: "Parody Sticker Art",
+                    link: "wacky.html",
+                    color: "#2e86ab"
+                },
+                custom: {
+                    name: "CUSTOM CARDS",
+                    description: "Fan Art Gallery",
+                    link: "custom.html",
+                    color: "#4caf50"
+                },
+                trading: {
+                    name: "TRADING HUB",
+                    description: "Connect & Trade",
+                    link: "trading.html",
+                    color: "#ff9800"
+                },
+                "pack-opening": {
+                    name: "VIRTUAL PACKS",
+                    description: "Open Digital Packs",
+                    link: "packs.html",
+                    color: "#9c27b0"
+                }
+            };
             
             // Initialize
             function init() {
-                setupMobileDetection();
-                setupVRHandling();
-                setupScreenInteractions();
-                setupMobileControls();
+                setupStartButton();
+                setupProximityDetection();
+                setupGazeInteraction();
+                setupOrientationMonitoring();
                 hideLoadingScreen();
-                setupOrientationHandling();
             }
             
-            // Mobile Detection and Configuration
-            function setupMobileDetection() {
-                if (isMobile) {
-                    // Show mobile controls
-                    document.getElementById('mobile-controls').style.display = 'flex';
-                    
-                    // Configure scene for mobile
-                    scene.setAttribute('renderer', 'precision', 'low');
-                    scene.setAttribute('renderer', 'antialias', 'false');
-                    
-                    // Enable touch controls
-                    const cameraRig = document.getElementById('camera-rig');
-                    if (cameraRig) {
-                        cameraRig.setAttribute('movement-controls', 'speed: 0.1');
-                    }
-                }
+            // Start Button
+            function setupStartButton() {
+                startBtn.addEventListener('click', () => {
+                    startOverlay.style.opacity = '0';
+                    setTimeout(() => {
+                        startOverlay.style.display = 'none';
+                        isStarted = true;
+                        
+                        // Request device orientation permission for iOS
+                        if (typeof DeviceOrientationEvent !== 'undefined' && 
+                            typeof DeviceOrientationEvent.requestPermission === 'function') {
+                            DeviceOrientationEvent.requestPermission()
+                                .then(permissionState => {
+                                    if (permissionState === 'granted') {
+                                        console.log('Device orientation granted');
+                                    }
+                                })
+                                .catch(console.error);
+                        }
+                    }, 300);
+                });
             }
             
-            // VR Mode Handling
-            function setupVRHandling() {
-                // Check WebXR support
-                function checkVRSupport() {
-                    if (navigator.xr) {
-                        navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
-                            if (supported) {
-                                enterVRBtn.classList.add('show');
-                                if (mobileVRBtn) {
-                                    mobileVRBtn.style.display = 'block';
-                                }
+            // Proximity Detection - Checks distance between camera and zones
+            function setupProximityDetection() {
+                const zones = document.querySelectorAll('.interaction-zone');
+                const PROXIMITY_THRESHOLD = 3; // meters
+                const INTERACTION_THRESHOLD = 1.5; // meters
+                
+                function checkProximity() {
+                    if (!isStarted) return;
+                    
+                    const cameraPos = camera.getAttribute('position');
+                    let closestZone = null;
+                    let closestDistance = Infinity;
+                    
+                    zones.forEach(zone => {
+                        const zonePos = zone.getAttribute('position');
+                        const distance = calculateDistance(cameraPos, zonePos);
+                        
+                        // Update zone glow based on distance
+                        const glowElements = zone.querySelectorAll('.proximity-glow');
+                        glowElements.forEach(glow => {
+                            if (distance < PROXIMITY_THRESHOLD) {
+                                const opacity = Math.max(0, 0.3 - (distance / PROXIMITY_THRESHOLD) * 0.3);
+                                glow.setAttribute('material', 'opacity', opacity);
+                                glow.setAttribute('material', 'emissiveIntensity', opacity);
+                            } else {
+                                glow.setAttribute('material', 'opacity', 0.1);
+                                glow.setAttribute('material', 'emissiveIntensity', 0.1);
                             }
-                        }).catch(() => {
-                            console.log('WebXR not supported');
                         });
-                    } else if (AFRAME.utils.device.isMobile()) {
-                        // Fallback to Cardboard mode for older devices
-                        if (mobileVRBtn) {
-                            mobileVRBtn.style.display = 'block';
+                        
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closestZone = zone;
                         }
-                    }
-                }
-                
-                // Enter VR button
-                enterVRBtn.addEventListener('click', () => {
-                    enterVR();
-                });
-                
-                // Mobile VR button
-                if (mobileVRBtn) {
-                    mobileVRBtn.addEventListener('click', () => {
-                        enterVR();
                     });
-                }
-                
-                function enterVR() {
-                    if (isMobile) {
-                        // For mobile, try cardboard/stereo mode first
-                        const camera = document.getElementById('main-camera');
-                        if (camera) {
-                            camera.setAttribute('stereo', 'eyeSeparation: 0.064');
-                        }
-                    }
                     
-                    // Try to enter VR
-                    scene.enterVR().then(() => {
-                        console.log('Entered VR mode');
-                        enterVRBtn.classList.remove('show');
-                    }).catch((err) => {
-                        console.error('Failed to enter VR:', err);
+                    // Update proximity indicator
+                    if (closestDistance < INTERACTION_THRESHOLD && closestZone) {
+                        const zoneType = closestZone.getAttribute('zone-type');
+                        const data = zoneData[zoneType];
                         
-                        // Fallback: Show in fullscreen
-                        if (document.documentElement.requestFullscreen) {
-                            document.documentElement.requestFullscreen();
+                        if (data) {
+                            proximityText.textContent = `${data.name} - Stare to enter`;
+                            proximityIndicator.classList.add('active');
+                            currentZone = zoneType;
                         }
+                    } else if (closestDistance < PROXIMITY_THRESHOLD && closestZone) {
+                        const zoneType = closestZone.getAttribute('zone-type');
+                        const data = zoneData[zoneType];
                         
-                        // For mobile, show orientation warning
-                        if (isMobile) {
-                            orientationWarning.classList.add('show');
-                            setTimeout(() => {
-                                orientationWarning.classList.remove('show');
-                            }, 3000);
+                        if (data) {
+                            proximityText.textContent = `${data.name} - Walk closer`;
+                            proximityIndicator.classList.add('active');
+                            currentZone = null;
                         }
-                    });
+                    } else {
+                        proximityIndicator.classList.remove('active');
+                        currentZone = null;
+                    }
                 }
                 
-                // Listen for VR mode changes
-                scene.addEventListener('enter-vr', () => {
-                    console.log('VR mode active');
-                    if (enterVRBtn) enterVRBtn.classList.remove('show');
-                });
-                
-                scene.addEventListener('exit-vr', () => {
-                    console.log('VR mode exited');
-                    if (isMobile) {
-                        enterVRBtn.classList.add('show');
-                    }
-                });
-                
-                // Check support after scene loads
-                scene.addEventListener('loaded', () => {
-                    checkVRSupport();
-                });
+                // Check proximity every 200ms
+                setInterval(checkProximity, 200);
             }
             
-            // Screen Interactions
-            function setupScreenInteractions() {
-                const screens = document.querySelectorAll('.screen');
-                const screenInfo = document.getElementById('screen-info');
-                const screenTitle = document.getElementById('screen-title');
-                const screenDescription = document.getElementById('screen-description');
+            // Gaze Interaction - Stare at zone to interact
+            function setupGazeInteraction() {
+                const zones = document.querySelectorAll('.interaction-zone');
                 
-                const screenData = {
-                    vintage: {
-                        title: "VINTAGE COLLECTION",
-                        description: "Explore original 1985 GPK cards",
-                        link: "vintage.html"
-                    },
-                    modern: {
-                        title: "MODERN SERIES",
-                        description: "View latest GPK releases",
-                        link: "modern.html"
-                    },
-                    wacky: {
-                        title: "WACKY PACKAGES",
-                        description: "Parody sticker collection",
-                        link: "wacky.html"
-                    },
-                    custom: {
-                        title: "CUSTOM CARDS",
-                        description: "Fan-created artwork",
-                        link: "custom.html"
-                    },
-                    trading: {
-                        title: "TRADING HUB",
-                        description: "Connect with collectors",
-                        link: "trading.html"
-                    },
-                    "pack-opening": {
-                        title: "VIRTUAL PACKS",
-                        description: "Open digital packs",
-                        link: "packs.html"
-                    }
-                };
-                
-                screens.forEach(screen => {
-                    const screenType = screen.getAttribute('screen-type');
-                    
-                    screen.addEventListener('click', () => {
-                        const data = screenData[screenType];
-                        if (data) {
-                            screenTitle.textContent = data.title;
-                            screenDescription.textContent = data.description;
-                            screenInfo.classList.add('active');
+                zones.forEach(zone => {
+                    zone.addEventListener('click', () => {
+                        const zoneType = zone.getAttribute('zone-type');
+                        const data = zoneData[zoneType];
+                        
+                        if (data && currentZone === zoneType) {
+                            // Visual feedback
+                            const glowElements = zone.querySelectorAll('.proximity-glow');
+                            glowElements.forEach(glow => {
+                                glow.setAttribute('material', 'opacity', 0.5);
+                                glow.setAttribute('material', 'emissiveIntensity', 0.5);
+                            });
                             
-                            // Navigate after delay
+                            // Show transitioning message
+                            proximityText.textContent = `Entering ${data.name}...`;
+                            proximityIndicator.classList.add('active');
+                            
+                            // Navigate after brief delay
                             setTimeout(() => {
                                 window.location.href = data.link;
-                            }, 1000);
+                            }, 500);
                         }
-                    });
-                    
-                    screen.addEventListener('mouseenter', () => {
-                        const data = screenData[screenType];
-                        if (data) {
-                            screenTitle.textContent = data.title;
-                            screenDescription.textContent = data.description;
-                            screenInfo.classList.add('active');
-                        }
-                    });
-                    
-                    screen.addEventListener('mouseleave', () => {
-                        screenInfo.classList.remove('active');
                     });
                 });
             }
             
-            // Mobile Controls
-            function setupMobileControls() {
-                if (!isMobile) return;
-                
-                const cameraRig = document.getElementById('camera-rig');
-                let moveInterval;
-                let moveDirection = null;
-                
-                // Movement buttons
-                const controls = {
-                    'move-forward': { position: '0 0 -0.2' },
-                    'move-backward': { position: '0 0 0.2' },
-                    'look-left': { rotation: '0 -10 0' },
-                    'look-right': { rotation: '0 10 0' },
-                    'look-up': { rotation: '-10 0 0' },
-                    'look-down': { rotation: '10 0 0' }
-                };
-                
-                Object.keys(controls).forEach(id => {
-                    const btn = document.getElementById(id);
-                    if (!btn) return;
-                    
-                    btn.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        moveDirection = controls[id];
-                        startMoving();
-                    });
-                    
-                    btn.addEventListener('touchend', () => {
-                        moveDirection = null;
-                        stopMoving();
-                    });
-                    
-                    btn.addEventListener('mousedown', () => {
-                        moveDirection = controls[id];
-                        startMoving();
-                    });
-                    
-                    btn.addEventListener('mouseup', () => {
-                        moveDirection = null;
-                        stopMoving();
-                    });
-                });
-                
-                function startMoving() {
-                    if (moveInterval) return;
-                    moveInterval = setInterval(() => {
-                        if (!moveDirection || !cameraRig) return;
-                        
-                        if (moveDirection.position) {
-                            const pos = cameraRig.getAttribute('position');
-                            const [dx, dy, dz] = moveDirection.position.split(' ').map(Number);
-                            cameraRig.setAttribute('position', {
-                                x: pos.x + dx,
-                                y: pos.y + dy,
-                                z: pos.z + dz
-                            });
-                        }
-                        
-                        if (moveDirection.rotation) {
-                            const rot = cameraRig.getAttribute('rotation');
-                            const [rx, ry, rz] = moveDirection.rotation.split(' ').map(Number);
-                            cameraRig.setAttribute('rotation', {
-                                x: rot.x + rx,
-                                y: rot.y + ry,
-                                z: rot.z + rz
-                            });
-                        }
-                    }, 50);
-                }
-                
-                function stopMoving() {
-                    if (moveInterval) {
-                        clearInterval(moveInterval);
-                        moveInterval = null;
-                    }
-                }
-            }
-            
-            // Orientation Handling
-            function setupOrientationHandling() {
-                if (!isMobile) return;
-                
+            // Orientation Monitoring
+            function setupOrientationMonitoring() {
                 function checkOrientation() {
                     if (window.innerWidth < window.innerHeight) {
-                        // Portrait mode
-                        orientationWarning.classList.add('show');
+                        orientationHint.style.display = 'block';
                     } else {
-                        orientationWarning.classList.remove('show');
+                        orientationHint.style.display = 'none';
                     }
                 }
                 
@@ -800,6 +570,14 @@
                 
                 window.addEventListener('resize', checkOrientation);
                 checkOrientation();
+                
+                // Hide after 5 seconds
+                setTimeout(() => {
+                    orientationHint.style.opacity = '0';
+                    setTimeout(() => {
+                        orientationHint.style.display = 'none';
+                    }, 1000);
+                }, 5000);
             }
             
             // Hide Loading Screen
@@ -809,10 +587,41 @@
                         loadingScreen.style.opacity = '0';
                         setTimeout(() => {
                             loadingScreen.style.display = 'none';
-                        }, 800);
-                    }, 1500);
+                        }, 500);
+                    }, 1000);
                 });
             }
+            
+            // Utility: Calculate 3D distance
+            function calculateDistance(pos1, pos2) {
+                const dx = pos1.x - pos2.x;
+                const dy = pos1.y - pos2.y;
+                const dz = pos1.z - pos2.z;
+                return Math.sqrt(dx * dx + dy * dy + dz * dz);
+            }
+            
+            // Utility: Show temporary message
+            function showMessage(text, duration = 3000) {
+                proximityText.textContent = text;
+                proximityIndicator.classList.add('active');
+                
+                if (proximityTimeout) clearTimeout(proximityTimeout);
+                proximityTimeout = setTimeout(() => {
+                    proximityIndicator.classList.remove('active');
+                }, duration);
+            }
+            
+            // Handle scene load
+            scene.addEventListener('loaded', () => {
+                console.log('GPK Ultra 3D Mobile ready');
+            });
+            
+            // Handle errors
+            window.addEventListener('error', (e) => {
+                if (e.target.tagName === 'IMG' || e.target.tagName === 'AUDIO') {
+                    console.warn('Asset failed to load:', e.target.src);
+                }
+            });
             
             // Initialize when ready
             if (document.readyState === 'loading') {
@@ -820,27 +629,6 @@
             } else {
                 init();
             }
-            
-            // Handle scene errors
-            scene.addEventListener('renderstart', () => {
-                console.log('Scene rendering started');
-            });
-            
-            // Keyboard shortcuts for mobile testing
-            document.addEventListener('keydown', (e) => {
-                switch(e.key) {
-                    case 'Enter':
-                        if (enterVRBtn.classList.contains('show')) {
-                            enterVRBtn.click();
-                        }
-                        break;
-                    case 'Escape':
-                        if (scene.is('vr-mode')) {
-                            scene.exitVR();
-                        }
-                        break;
-                }
-            });
             
         })();
     </script>
