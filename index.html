@@ -2,12 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>GPK ULTRA 3D | Immersive Collector's Hub</title>
     
     <!-- Preload critical resources -->
-    <link rel="preload" href="https://aframe.io/releases/1.3.0/aframe.min.js" as="script">
-    <link rel="preload" href="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js" as="script">
+    <link rel="preload" href="https://aframe.io/releases/1.5.0/aframe.min.js" as="script">
     <link rel="preload" href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" as="style">
     
     <!-- WebXR and PWA meta tags -->
@@ -18,14 +17,18 @@
     <meta name="apple-mobile-web-app-title" content="GPK Ultra 3D">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="msapplication-TileColor" content="#1a1a1a">
+    <meta name="description" content="GPK Ultra 3D - Immersive Garbage Pail Kids Collector's Experience">
     
-    <!-- A-Frame and components -->
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <!-- A-Frame Core (Updated to 1.5.0 for better performance) -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    
+    <!-- A-Frame Components (Optimized selection) -->
     <script src="https://unpkg.com/aframe-event-set-component@5.0.0/dist/aframe-event-set-component.min.js"></script>
     <script src="https://unpkg.com/aframe-layout-component@5.3.0/dist/aframe-layout-component.min.js"></script>
     <script src="https://unpkg.com/aframe-template-component@3.2.1/dist/aframe-template-component.min.js"></script>
     <script src="https://unpkg.com/aframe-animation-component@5.1.2/dist/aframe-animation-component.min.js"></script>
     <script src="https://unpkg.com/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+    <script src="https://unpkg.com/aframe-physics-system@4.0.1/dist/aframe-physics-system.min.js"></script>
     
     <style>
         :root {
@@ -34,6 +37,7 @@
             --gpk-blue: #2e86ab;
             --gpk-black: #1a1a1a;
             --gpk-paper: #f5f5f0;
+            --gpk-green: #4caf50;
             --transition-fast: 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             --transition-medium: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             --transition-slow: 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -43,121 +47,151 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Bangers', cursive, sans-serif;
         }
         
         body {
+            font-family: 'Bangers', 'Comic Sans MS', cursive, sans-serif;
             background-color: var(--gpk-black);
             color: white;
-            overflow-x: hidden;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            touch-action: manipulation;
         }
 
-        /* Enhanced Loading Screen */
+        /* Enhanced Loading Screen with GPU Acceleration */
         #loading-screen {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, var(--gpk-black) 0%, #2a2a2a 100%);
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            transition: opacity var(--transition-slow);
+            transition: opacity 0.8s ease-out;
             will-change: opacity;
+            pointer-events: all;
         }
         
         .loading-logo {
-            width: 200px;
+            width: min(200px, 40vw);
             height: auto;
             margin-bottom: 2rem;
-            filter: drop-shadow(0 0 10px var(--gpk-yellow));
+            filter: drop-shadow(0 0 20px var(--gpk-yellow));
             animation: float 3s ease-in-out infinite;
         }
         
         .loading-progress {
-            width: 80%;
-            max-width: 300px;
-            height: 6px;
+            width: min(80%, 300px);
+            height: 8px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            margin: 1rem 0;
+            border-radius: 4px;
+            margin: 1.5rem 0;
             overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .loading-progress-bar {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, var(--gpk-red) 0%, var(--gpk-yellow) 100%);
-            transition: width var(--transition-medium);
-            border-radius: 3px;
+            background: linear-gradient(90deg, var(--gpk-red), var(--gpk-yellow));
+            transition: width 0.3s ease;
+            border-radius: 4px;
+            box-shadow: 0 0 15px rgba(255, 222, 55, 0.5);
         }
         
         .loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.1);
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
             border-radius: 50%;
             border-top-color: var(--gpk-yellow);
-            border-bottom-color: var(--gpk-red);
-            animation: spin 1.5s linear infinite;
+            border-right-color: var(--gpk-red);
+            animation: spin 1.2s linear infinite;
             margin-bottom: 1rem;
         }
         
         .loading-text {
-            font-size: 1.5rem;
+            font-size: clamp(1rem, 3vw, 1.5rem);
             color: white;
             text-align: center;
-            text-shadow: 0 0 10px var(--gpk-yellow);
+            text-shadow: 0 0 15px var(--gpk-yellow);
             margin-top: 1rem;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            animation: pulse 2s ease-in-out infinite;
         }
-        
-        /* Enhanced Screen Info Panel */
+
+        /* Screen Info Panel */
         .screen-info {
             position: fixed;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(26, 26, 26, 0.95);
-            padding: 15px 30px;
-            border-radius: 30px;
+            padding: 20px 35px;
+            border-radius: 20px;
             border: 3px solid var(--gpk-yellow);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 222, 55, 0.2);
             z-index: 1000;
             display: none;
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            max-width: 90%;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            max-width: 90vw;
             text-align: center;
-            transition: all var(--transition-fast);
+            transition: all 0.3s ease;
+        }
+        
+        .screen-info.active {
+            display: block;
+            animation: slideUp 0.3s ease;
         }
         
         .screen-info h3 {
             color: var(--gpk-yellow);
-            font-size: 1.5rem;
+            font-size: clamp(1.2rem, 4vw, 1.8rem);
             margin-bottom: 0.5rem;
-            text-shadow: 2px 2px 0 var(--gpk-red);
+            text-shadow: 3px 3px 0 var(--gpk-red);
+            letter-spacing: 1px;
         }
         
         .screen-info p {
-            font-size: 1rem;
-            color: white;
-            margin-bottom: 0;
+            font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+            color: #ffffff;
+            margin-bottom: 0.8rem;
+            opacity: 0.9;
         }
         
+        .screen-hotkeys {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+        }
+        
+        .screen-hotkeys span {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 5px 12px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--gpk-yellow);
+        }
+
         /* Navigation Controls */
         .nav-controls {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 30px;
+            right: 30px;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 12px;
             z-index: 1000;
         }
         
@@ -165,7 +199,7 @@
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background: rgba(26, 26, 26, 0.8);
+            background: rgba(26, 26, 26, 0.9);
             border: 2px solid var(--gpk-yellow);
             color: white;
             display: flex;
@@ -173,71 +207,126 @@
             align-items: center;
             font-size: 1.5rem;
             cursor: pointer;
-            transition: all var(--transition-fast);
+            transition: all 0.2s ease;
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            font-family: 'Bangers', cursive;
         }
         
         .nav-btn:hover {
             background: var(--gpk-yellow);
             color: var(--gpk-black);
-            transform: scale(1.1);
+            transform: scale(1.15);
+            box-shadow: 0 6px 20px rgba(255, 222, 55, 0.4);
         }
         
+        .nav-btn:active {
+            transform: scale(0.95);
+        }
+
         /* VR Mode Indicator */
         .vr-indicator {
             position: fixed;
             top: 20px;
             right: 20px;
-            background: rgba(26, 26, 26, 0.8);
+            background: rgba(46, 134, 171, 0.9);
             border: 2px solid var(--gpk-blue);
             color: white;
-            padding: 8px 15px;
-            border-radius: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
             font-size: 0.9rem;
             z-index: 1000;
             display: none;
             backdrop-filter: blur(5px);
             -webkit-backdrop-filter: blur(5px);
+            animation: pulse 2s infinite;
+            letter-spacing: 2px;
         }
         
+        .vr-indicator.active {
+            display: block;
+        }
+
+        /* Mobile Warning */
+        .mobile-warning {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(26, 26, 26, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            border: 3px solid var(--gpk-yellow);
+            z-index: 1001;
+            text-align: center;
+            display: none;
+        }
+        
+        .mobile-warning h3 {
+            color: var(--gpk-yellow);
+            margin-bottom: 15px;
+        }
+        
+        .mobile-warning button {
+            background: var(--gpk-yellow);
+            color: var(--gpk-black);
+            border: none;
+            padding: 10px 25px;
+            border-radius: 20px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            font-family: 'Bangers', cursive;
+            margin-top: 15px;
+        }
+
         /* Keyframes */
         @keyframes spin {
             to { transform: rotate(360deg); }
         }
         
         @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-15px); }
         }
         
         @keyframes pulse {
-            0% { opacity: 0.8; }
+            0%, 100% { opacity: 0.8; }
             50% { opacity: 1; }
-            100% { opacity: 0.8; }
         }
         
-        /* Responsive adjustments */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* Responsive Design */
         @media (max-width: 768px) {
             .loading-logo {
                 width: 150px;
             }
             
-            .loading-text {
-                font-size: 1.2rem;
-            }
-            
             .screen-info {
-                padding: 10px 20px;
+                padding: 15px 25px;
+                bottom: 20px;
             }
             
-            .screen-info h3 {
-                font-size: 1.2rem;
+            .nav-controls {
+                bottom: 20px;
+                right: 20px;
+                gap: 10px;
             }
             
-            .screen-info p {
-                font-size: 0.9rem;
+            .nav-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1.3rem;
             }
         }
         
@@ -246,13 +335,15 @@
                 width: 120px;
             }
             
-            .loading-text {
-                font-size: 1rem;
+            .screen-info {
+                padding: 12px 20px;
+                border-radius: 15px;
             }
             
             .nav-controls {
-                bottom: 10px;
-                right: 10px;
+                bottom: 15px;
+                right: 15px;
+                gap: 8px;
             }
             
             .nav-btn {
@@ -265,304 +356,310 @@
     <link href="https://fonts.googleapis.com/css2?family=Bangers&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Enhanced Loading Screen -->
+    <!-- Loading Screen -->
     <div id="loading-screen">
-        <img src="https://upload.wikimedia.org/wikipedia/en/4/4f/Garbage_Pail_Kids_Logo.svg" alt="GPK Logo" class="loading-logo">
+        <img src="https://upload.wikimedia.org/wikipedia/en/4/4f/Garbage_Pail_Kids_Logo.svg" 
+             alt="GPK Logo" 
+             class="loading-logo"
+             onerror="this.style.display='none'">
         <div class="loading-spinner"></div>
         <div class="loading-progress">
             <div class="loading-progress-bar" id="progress-bar"></div>
         </div>
-        <div class="loading-text" id="loading-text">INITIALIZING 3D ENVIRONMENT...</div>
+        <div class="loading-text" id="loading-text">INITIALIZING GPK ULTRA 3D...</div>
     </div>
 
-    <!-- Enhanced Screen Info Panel -->
+    <!-- Screen Info Panel -->
     <div id="screen-info" class="screen-info">
         <h3 id="screen-title">SCREEN TITLE</h3>
-        <p id="screen-description">Select to enter this experience</p>
+        <p id="screen-description">Click to enter this experience</p>
         <div id="screen-hotkeys" class="screen-hotkeys"></div>
+    </div>
+
+    <!-- Mobile Warning -->
+    <div id="mobile-warning" class="mobile-warning">
+        <h3>📱 MOBILE DEVICE DETECTED</h3>
+        <p>For the best experience, use a desktop computer or VR headset.</p>
+        <button onclick="this.parentElement.style.display='none'">CONTINUE ANYWAY</button>
     </div>
 
     <!-- VR Mode Indicator -->
     <div class="vr-indicator" id="vr-indicator">
-        VR MODE ACTIVE
+        🥽 VR MODE ACTIVE
     </div>
 
     <!-- Navigation Controls -->
     <div class="nav-controls">
-        <button class="nav-btn" id="reset-view">↻</button>
-        <button class="nav-btn" id="vr-btn">👓</button>
-        <button class="nav-btn" id="help-btn">?</button>
+        <button class="nav-btn" id="reset-view" title="Reset View">↻</button>
+        <button class="nav-btn" id="vr-btn" title="Enter VR">👓</button>
+        <button class="nav-btn" id="help-btn" title="Help">?</button>
+        <button class="nav-btn" id="fullscreen-btn" title="Fullscreen">⛶</button>
     </div>
 
-    <!-- A-Frame Scene with Enhanced Features -->
+    <!-- A-Frame Scene -->
     <a-scene 
-        loading-screen="enabled: false" 
-        renderer="colorManagement: true; antialias: true; precision: high"
+        renderer="colorManagement: true; antialias: true; precision: high; physicallyCorrectLights: true; exposure: 1.0; toneMapping: ACESFilmic"
         vr-mode-ui="enabled: true"
-        xr-mode-ui="enabled: true"
         device-orientation-permission-ui="enabled: false"
         background="color: #1a1a1a"
+        physics="debug: false"
     >
-        <!-- Enhanced Room Environment with PBR Materials -->
-        <a-entity id="room" geometry="primitive: box; width: 15; height: 6; depth: 15"
-                material="shader: standard; color: #333333; metalness: 0.1; roughness: 0.8; side: back"
-                position="0 3 0">
-                
-            <!-- Enhanced Floor with Normal Map -->
-            <a-entity geometry="primitive: plane; width: 15; height: 15" 
-                    rotation="-90 0 0" 
-                    material="shader: standard; src: #floor-texture; normalMap: #floor-normal; repeat: 10 10; metalness: 0.1; roughness: 0.7"></a-entity>
+        <!-- Main Room Environment -->
+        <a-entity id="room" 
+                  geometry="primitive: box; width: 20; height: 8; depth: 20"
+                  material="shader: standard; color: #2a2a2a; metalness: 0.1; roughness: 0.8; side: back"
+                  position="0 4 0">
             
-            <!-- Enhanced Ceiling -->
-            <a-entity geometry="primitive: plane; width: 15; height: 15" 
-                    rotation="90 0 0" 
-                    position="0 6 0"
-                    material="shader: standard; color: #222222; metalness: 0.05; roughness: 0.8"></a-entity>
+            <!-- Enhanced Floor -->
+            <a-entity geometry="primitive: plane; width: 20; height: 20" 
+                     rotation="-90 0 0" 
+                     position="0 0 0"
+                     material="shader: standard; color: #1a1a1a; metalness: 0.3; roughness: 0.5" 
+                     class="floor">
+            </a-entity>
             
-            <!-- Enhanced Back Wall with Display Cases -->
-            <a-entity geometry="primitive: plane; width: 15; height: 6" 
-                    position="0 3 -7.5"
-                    material="shader: standard; src: #wall-texture; metalness: 0.1; roughness: 0.6"></a-entity>
+            <!-- Ceiling -->
+            <a-entity geometry="primitive: plane; width: 20; height: 20" 
+                     rotation="90 0 0" 
+                     position="0 8 0"
+                     material="shader: standard; color: #151515; metalness: 0.05; roughness: 0.9">
+            </a-entity>
             
-            <!-- Enhanced Side Walls -->
-            <a-entity geometry="primitive: plane; width: 15; height: 6" 
-                    position="-7.5 3 0"
-                    rotation="0 90 0"
-                    material="shader: standard; color: #252525; metalness: 0.1; roughness: 0.7"></a-entity>
+            <!-- Walls -->
+            <a-entity geometry="primitive: plane; width: 20; height: 8" 
+                     position="0 4 -10"
+                     material="shader: standard; color: #252525; metalness: 0.1; roughness: 0.7">
+            </a-entity>
             
-            <a-entity geometry="primitive: plane; width: 15; height: 6" 
-                    position="7.5 3 0"
-                    rotation="0 -90 0"
-                    material="shader: standard; color: #252525; metalness: 0.1; roughness: 0.7"></a-entity>
+            <a-entity geometry="primitive: plane; width: 20; height: 8" 
+                     position="-10 4 0"
+                     rotation="0 90 0"
+                     material="shader: standard; color: #252525; metalness: 0.1; roughness: 0.7">
+            </a-entity>
+            
+            <a-entity geometry="primitive: plane; width: 20; height: 8" 
+                     position="10 4 0"
+                     rotation="0 -90 0"
+                     material="shader: standard; color: #252525; metalness: 0.1; roughness: 0.7">
+            </a-entity>
         </a-entity>
         
         <!-- Enhanced Lighting System -->
-        <a-entity light="type: ambient; color: #444; intensity: 0.4"></a-entity>
+        <a-entity light="type: ambient; color: #666; intensity: 0.3"></a-entity>
         
-        <!-- Directional Lights with Shadows -->
-        <a-entity light="type: directional; color: #FFDE37; intensity: 0.8; castShadow: true; shadowMapWidth: 2048; shadowMapHeight: 2048" 
-                position="-3 5 3" rotation="-30 30 0">
-            <a-entity geometry="primitive: plane; width: 0.5; height: 0.5" material="color: #FFDE37; emissive: #FFDE37; emissiveIntensity: 2"></a-entity>
+        <!-- Main Directional Lights -->
+        <a-entity light="type: directional; color: #FFDE37; intensity: 1.0; castShadow: true; shadowMapWidth: 2048; shadowMapHeight: 2048; shadowCameraFar: 50" 
+                  position="-5 8 5" 
+                  rotation="-45 30 0">
         </a-entity>
         
-        <a-entity light="type: directional; color: #FF3E41; intensity: 0.6; castShadow: true" 
-                position="3 5 -3" rotation="-30 -30 0">
-            <a-entity geometry="primitive: plane; width: 0.5; height: 0.5" material="color: #FF3E41; emissive: #FF3E41; emissiveIntensity: 2"></a-entity>
+        <a-entity light="type: directional; color: #FF3E41; intensity: 0.6; castShadow: true; shadowMapWidth: 1024; shadowMapHeight: 1024" 
+                  position="5 7 -3" 
+                  rotation="-45 -45 0">
         </a-entity>
         
-        <!-- Accent Lighting -->
-        <a-entity light="type: point; color: #2e86ab; intensity: 1.5; distance: 8; decay: 2" position="0 4 0"></a-entity>
-        <a-entity light="type: point; color: #ffde37; intensity: 0.5; distance: 5; decay: 2" position="-5 2 -5"></a-entity>
-        <a-entity light="type: point; color: #ff3e41; intensity: 0.5; distance: 5; decay: 2" position="5 2 5"></a-entity>
+        <!-- Accent Point Lights -->
+        <a-entity light="type: point; color: #ffde37; intensity: 2; distance: 10; decay: 2" position="-6 3 -7"></a-entity>
+        <a-entity light="type: point; color: #ff3e41; intensity: 2; distance: 10; decay: 2" position="6 3 -7"></a-entity>
+        <a-entity light="type: point; color: #2e86ab; intensity: 3; distance: 12; decay: 2" position="0 5 -5"></a-entity>
         
-        <!-- Enhanced Camera Rig with Smooth Movement -->
-        <a-entity id="camera-rig" position="0 1.6 0" movement-controls="speed: 0.5">
+        <!-- Camera Rig -->
+        <a-entity id="camera-rig" position="0 1.6 2" 
+                  movement-controls="speed: 0.3; fly: false; constrainToNavMesh: false">
             <a-entity camera="active: true; fov: 80; near: 0.1; far: 1000" 
                      look-controls="pointerLockEnabled: true; touchEnabled: true; mouseEnabled: true"
-                     wasd-controls="acceleration: 30; fly: false">
-                <a-entity cursor="fuse: true; fuseTimeout: 500" 
-                          position="0 0 -1" 
-                          geometry="primitive: ring; radiusInner: 0.01; radiusOuter: 0.02" 
-                          material="color: #FFDE37; shader: flat; opacity: 0.8"
-                          animation__click="property: scale; startEvents: click; from: 0.1 0.1 0.1; to: 1 1 1; dur: 300"
-                          animation__fusing="property: scale; startEvents: fusing; from: 1 1 1; to: 0.1 0.1 0.1; dur: 500"
-                          animation__mouseenter="property: material.color; startEvents: mouseenter; from: #FFDE37; to: #FF3E41; dur: 200">
+                     wasd-controls="acceleration: 50; fly: false">
+                <!-- Enhanced Cursor -->
+                <a-entity cursor="fuse: false; fuseTimeout: 500" 
+                          position="0 0 -1.5" 
+                          geometry="primitive: ring; radiusInner: 0.015; radiusOuter: 0.025" 
+                          material="color: #FFDE37; shader: flat; opacity: 0.9"
+                          animation__mouseenter="property: scale; from: 1 1 1; to: 1.3 1.3 1.3; dur: 200; startEvents: mouseenter"
+                          animation__mouseleave="property: scale; from: 1.3 1.3 1.3; to: 1 1 1; dur: 200; startEvents: mouseleave">
                 </a-entity>
             </a-entity>
         </a-entity>
         
-        <!-- Interactive Screens with Enhanced Visuals -->
-        <a-entity id="screens" layout="type: line; margin: 1.5" position="0 1.5 -7.4" rotation="0 0 0">
+        <!-- Interactive Screens - Row 1 -->
+        <a-entity id="screens-row1" layout="type: line; margin: 2" position="0 2.2 -9.8" rotation="0 0 0">
+            
             <!-- Vintage Collection Screen -->
-            <a-entity class="screen" screen-type="vintage" width="2.5" height="1.5">
+            <a-entity class="screen" screen-type="vintage" width="3" height="2">
                 <a-plane material="shader: standard; src: #vintage-screen; metalness: 0.1; roughness: 0.3" 
-                         width="2.5" height="1.5"
-                         animation__hover="property: material.emissiveIntensity; from: 0; to: 0.3; dur: 300; startEvents: mouseenter; pauseEvents: mouseleave">
+                         width="3" height="2"
+                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
+                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
                 </a-plane>
-                <a-text value="VINTAGE\nCOLLECTION" position="0 1.1 0.01" color="#FFDE37" align="center" width="3" 
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-text value="1985 Original Series" position="0 -1.1 0.01" color="#FFFFFF" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-entity class="screen-frame" geometry="primitive: box; width: 2.6; height: 1.6; depth: 0.1" 
-                          material="shader: standard; color: #333333; metalness: 0.5; roughness: 0.3" 
-                          position="0 0 -0.05"></a-entity>
+                <a-text value="VINTAGE\nCOLLECTION" position="0 1.3 0.02" color="#FFDE37" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+                <a-text value="1985 Original Series" position="0 -1.3 0.02" color="#FFFFFF" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
             </a-entity>
             
             <!-- Modern Series Screen -->
-            <a-entity class="screen" screen-type="modern" width="2.5" height="1.5">
+            <a-entity class="screen" screen-type="modern" width="3" height="2">
                 <a-plane material="shader: standard; src: #modern-screen; metalness: 0.1; roughness: 0.3" 
-                         width="2.5" height="1.5"
-                         animation__hover="property: material.emissiveIntensity; from: 0; to: 0.3; dur: 300; startEvents: mouseenter; pauseEvents: mouseleave">
+                         width="3" height="2"
+                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
+                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
                 </a-plane>
-                <a-text value="MODERN\nSERIES" position="0 1.1 0.01" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-text value="2020-Present" position="0 -1.1 0.01" color="#FFFFFF" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-entity class="screen-frame" geometry="primitive: box; width: 2.6; height: 1.6; depth: 0.1" 
-                          material="shader: standard; color: #333333; metalness: 0.5; roughness: 0.3" 
-                          position="0 0 -0.05"></a-entity>
+                <a-text value="MODERN\nSERIES" position="0 1.3 0.02" color="#FFDE37" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+                <a-text value="2020-Present Releases" position="0 -1.3 0.02" color="#FFFFFF" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
             </a-entity>
             
             <!-- Wacky Packages Screen -->
-            <a-entity class="screen" screen-type="wacky" width="2.5" height="1.5">
+            <a-entity class="screen" screen-type="wacky" width="3" height="2">
                 <a-plane material="shader: standard; src: #wacky-screen; metalness: 0.1; roughness: 0.3" 
-                         width="2.5" height="1.5"
-                         animation__hover="property: material.emissiveIntensity; from: 0; to: 0.3; dur: 300; startEvents: mouseenter; pauseEvents: mouseleave">
+                         width="3" height="2"
+                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
+                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
                 </a-plane>
-                <a-text value="WACKY\nPACKAGES" position="0 1.1 0.01" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-text value="Parody Stickers" position="0 -1.1 0.01" color="#FFFFFF" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-entity class="screen-frame" geometry="primitive: box; width: 2.6; height: 1.6; depth: 0.1" 
-                          material="shader: standard; color: #333333; metalness: 0.5; roughness: 0.3" 
-                          position="0 0 -0.05"></a-entity>
+                <a-text value="WACKY\nPACKAGES" position="0 1.3 0.02" color="#FFDE37" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+                <a-text value="Parody Sticker Art" position="0 -1.3 0.02" color="#FFFFFF" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
             </a-entity>
         </a-entity>
         
-        <!-- Second Row of Screens -->
-        <a-entity id="screens-row2" layout="type: line; margin: 1.5" position="0 3.5 -7.4" rotation="0 0 0">
+        <!-- Interactive Screens - Row 2 -->
+        <a-entity id="screens-row2" layout="type: line; margin: 2" position="0 4.8 -9.8" rotation="0 0 0">
+            
             <!-- Custom Cards Screen -->
-            <a-entity class="screen" screen-type="custom" width="2.5" height="1.5">
+            <a-entity class="screen" screen-type="custom" width="3" height="2">
                 <a-plane material="shader: standard; src: #custom-screen; metalness: 0.1; roughness: 0.3" 
-                         width="2.5" height="1.5"
-                         animation__hover="property: material.emissiveIntensity; from: 0; to: 0.3; dur: 300; startEvents: mouseenter; pauseEvents: mouseleave">
+                         width="3" height="2"
+                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
+                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
                 </a-plane>
-                <a-text value="CUSTOM\nCARDS" position="0 1.1 0.01" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-text value="Fan Creations" position="0 -1.1 0.01" color="#FFFFFF" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-entity class="screen-frame" geometry="primitive: box; width: 2.6; height: 1.6; depth: 0.1" 
-                          material="shader: standard; color: #333333; metalness: 0.5; roughness: 0.3" 
-                          position="0 0 -0.05"></a-entity>
+                <a-text value="CUSTOM\nCARDS" position="0 1.3 0.02" color="#FFDE37" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+                <a-text value="Fan Art Creations" position="0 -1.3 0.02" color="#FFFFFF" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
             </a-entity>
             
             <!-- Trading Hub Screen -->
-            <a-entity class="screen" screen-type="trading" width="2.5" height="1.5">
+            <a-entity class="screen" screen-type="trading" width="3" height="2">
                 <a-plane material="shader: standard; src: #trading-screen; metalness: 0.1; roughness: 0.3" 
-                         width="2.5" height="1.5"
-                         animation__hover="property: material.emissiveIntensity; from: 0; to: 0.3; dur: 300; startEvents: mouseenter; pauseEvents: mouseleave">
+                         width="3" height="2"
+                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
+                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
                 </a-plane>
-                <a-text value="TRADING\nHUB" position="0 1.1 0.01" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-text value="Swap With Collectors" position="0 -1.1 0.01" color="#FFFFFF" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-entity class="screen-frame" geometry="primitive: box; width: 2.6; height: 1.6; depth: 0.1" 
-                          material="shader: standard; color: #333333; metalness: 0.5; roughness: 0.3" 
-                          position="0 0 -0.05"></a-entity>
+                <a-text value="TRADING\nHUB" position="0 1.3 0.02" color="#FFDE37" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+                <a-text value="Swap With Collectors" position="0 -1.3 0.02" color="#FFFFFF" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
             </a-entity>
             
             <!-- Virtual Pack Opening Screen -->
-            <a-entity class="screen" screen-type="pack-opening" width="2.5" height="1.5">
+            <a-entity class="screen" screen-type="pack-opening" width="3" height="2">
                 <a-plane material="shader: standard; src: #pack-screen; metalness: 0.1; roughness: 0.3" 
-                         width="2.5" height="1.5"
-                         animation__hover="property: material.emissiveIntensity; from: 0; to: 0.3; dur: 300; startEvents: mouseenter; pauseEvents: mouseleave">
+                         width="3" height="2"
+                         event-set__mouseenter="material.emissive: #FFDE37; material.emissiveIntensity: 0.3"
+                         event-set__mouseleave="material.emissive: #000000; material.emissiveIntensity: 0">
                 </a-plane>
-                <a-text value="VIRTUAL\nPACKS" position="0 1.1 0.01" color="#FFDE37" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-text value="Open Digital Packs" position="0 -1.1 0.01" color="#FFFFFF" align="center" width="3"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-text>
-                <a-entity class="screen-frame" geometry="primitive: box; width: 2.6; height: 1.6; depth: 0.1" 
-                          material="shader: standard; color: #333333; metalness: 0.5; roughness: 0.3" 
-                          position="0 0 -0.05"></a-entity>
+                <a-text value="VIRTUAL\nPACKS" position="0 1.3 0.02" color="#FFDE37" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
+                <a-text value="Open Digital Packs" position="0 -1.3 0.02" color="#FFFFFF" align="center" width="4"
+                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json"></a-text>
             </a-entity>
         </a-entity>
         
-        <!-- Enhanced Room Decorations -->
-        <a-entity id="decorations">
-            <!-- GPK Logo on Wall with Animation -->
-            <a-image src="#gpk-logo" position="0 4.5 -7.4" width="3" height="1.5" rotation="0 0 0"
-                    animation="property: position; to: 0 4.7 -7.4; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine">
+        <!-- GPK Logo on Wall -->
+        <a-image src="#gpk-logo" position="0 6.5 -9.8" width="4" height="2"
+                animation="property: position; to: 0 6.7 -9.8; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine">
+        </a-image>
+        
+        <!-- Display Cases with Cards -->
+        <a-entity position="-4 1.5 -2" rotation="0 45 0">
+            <a-box position="0 0.8 0" width="2" height="1.2" depth="1.5" 
+                   material="shader: standard; color: #333333; metalness: 0.8; roughness: 0.2">
+            </a-box>
+            <a-box position="0 2.2 0" width="2" height="2.8" depth="1.5" 
+                   material="shader: standard; color: #AAAAAA; opacity: 0.15; transparent: true; metalness: 0.9; roughness: 0.1">
+            </a-box>
+            <a-image src="#sample-card1" position="0 2.2 0.2" width="1.2" height="1.6" 
+                    class="display-card" clickable>
             </a-image>
-            
-            <!-- Display Cases with Interactive Cards -->
-            <a-entity position="-5 1 0" rotation="0 30 0">
-                <a-box position="0 0.5 0" width="1.8" height="1" depth="1.2" material="shader: standard; color: #222222; metalness: 0.7; roughness: 0.3"></a-box>
-                <a-box position="0 1.8 0" width="1.8" height="2.5" depth="1.2" material="shader: standard; color: #AAAAAA; opacity: 0.2; transparent: true; metalness: 0.9; roughness: 0.1"></a-box>
-                <a-image src="#sample-card1" position="0 1.8 0.15" width="1" height="1.4" rotation="0 30 0"
-                        class="display-card" clickable>
-                </a-image>
-                <a-entity position="0 3.2 0.15" text="value: RARE CARD; align: center; width: 2; color: #FFDE37"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-entity>
-            </a-entity>
-            
-            <a-entity position="5 1 0" rotation="0 -30 0">
-                <a-box position="0 0.5 0" width="1.8" height="1" depth="1.2" material="shader: standard; color: #222222; metalness: 0.7; roughness: 0.3"></a-box>
-                <a-box position="0 1.8 0" width="1.8" height="2.5" depth="1.2" material="shader: standard; color: #AAAAAA; opacity: 0.2; transparent: true; metalness: 0.9; roughness: 0.1"></a-box>
-                <a-image src="#sample-card2" position="0 1.8 0.15" width="1" height="1.4" rotation="0 -30 0"
-                        class="display-card" clickable>
-                </a-image>
-                <a-entity position="0 3.2 0.15" text="value: LIMITED EDITION; align: center; width: 2; color: #FFDE37"
-                        font="https://cdn.aframe.io/fonts/Roboto-msdf.json" negate="false"></a-entity>
-            </a-entity>
-            
-            <!-- Floating Cards Animation -->
-            <a-entity id="floating-cards">
-                <a-image src="#sample-card3" position="-2 3 -3" width="0.8" height="1.1" rotation="0 20 0"
-                        animation="property: position; to: -2 3.5 -3; dir: alternate; dur: 3000; loop: true; easing: easeInOutSine">
-                </a-image>
-                <a-image src="#sample-card4" position="2 2.5 -4" width="0.8" height="1.1" rotation="0 -20 10"
-                        animation="property: position; to: 2 3 -4; dir: alternate; dur: 3500; loop: true; easing: easeInOutSine">
-                </a-image>
-                <a-image src="#sample-card5" position="0 2 -2" width="0.8" height="1.1" rotation="0 0 -5"
-                        animation="property: position; to: 0 2.5 -2; dir: alternate; dur: 4000; loop: true; easing: easeInOutSine">
-                </a-image>
-            </a-entity>
+            <a-text value="RARE CARD" position="0 3.8 0.2" color="#FFDE37" align="center" width="3"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+            </a-text>
         </a-entity>
         
-        <!-- Enhanced Audio Environment -->
-        <a-entity sound="src: #ambient-sound; autoplay: true; loop: true; volume: 0.3"></a-entity>
+        <a-entity position="4 1.5 -2" rotation="0 -45 0">
+            <a-box position="0 0.8 0" width="2" height="1.2" depth="1.5" 
+                   material="shader: standard; color: #333333; metalness: 0.8; roughness: 0.2">
+            </a-box>
+            <a-box position="0 2.2 0" width="2" height="2.8" depth="1.5" 
+                   material="shader: standard; color: #AAAAAA; opacity: 0.15; transparent: true; metalness: 0.9; roughness: 0.1">
+            </a-box>
+            <a-image src="#sample-card2" position="0 2.2 0.2" width="1.2" height="1.6" 
+                    class="display-card" clickable>
+            </a-image>
+            <a-text value="LIMITED EDITION" position="0 3.8 0.2" color="#FFDE37" align="center" width="3"
+                    font="https://cdn.aframe.io/fonts/Roboto-msdf.json">
+            </a-text>
+        </a-entity>
         
-        <!-- Enhanced Assets with Fallbacks -->
-        <a-assets timeout="20000">
-            <!-- Environment Textures -->
-            <img id="floor-texture" src="https://cdn.aframe.io/a-painter/images/floor.jpg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%221024%22 height%3D%221024%22 viewBox%3D%220 0 512 512%22%3E%3Crect width%3D%22512%22 height%3D%22512%22 fill%3D%22%23333%22%2F%3E%3C%2Fsvg%3E'">
-            
-            <img id="floor-normal" src="https://cdn.aframe.io/a-painter/images/floor-normal.jpg"
-                 onerror="this.removeAttribute('normalMap')">
-            
-            <img id="wall-texture" src="https://cdn.aframe.io/a-painter/images/wall.jpg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%221024%22 height%3D%221024%22 viewBox%3D%220 0 512 512%22%3E%3Crect width%3D%22512%22 height%3D%22512%22 fill%3D%22%23252525%22%2F%3E%3C%2Fsvg%3E'">
-            
-            <!-- Screen Content Images -->
+        <!-- Floating Cards Animation -->
+        <a-entity id="floating-cards">
+            <a-image src="#sample-card3" position="-3 3 -5" width="0.9" height="1.2" rotation="0 25 0"
+                    animation="property: position; to: -3 3.8 -5; dir: alternate; dur: 3500; loop: true; easing: easeInOutSine">
+            </a-image>
+            <a-image src="#sample-card4" position="3 2.5 -6" width="0.9" height="1.2" rotation="0 -25 10"
+                    animation="property: position; to: 3 3.3 -6; dir: alternate; dur: 3000; loop: true; easing: easeInOutSine">
+            </a-image>
+            <a-image src="#sample-card5" position="0 2.5 -4" width="0.9" height="1.2" rotation="0 0 -10"
+                    animation="property: position; to: 0 3.3 -4; dir: alternate; dur: 4000; loop: true; easing: easeInOutSine">
+            </a-image>
+        </a-entity>
+        
+        <!-- Audio -->
+        <a-entity sound="src: #ambient-sound; autoplay: true; loop: true; volume: 0.2"></a-entity>
+        
+        <!-- Assets -->
+        <a-assets timeout="30000">
+            <!-- Screen Content Images with Fallbacks -->
             <img id="vintage-screen" src="https://m.media-amazon.com/images/I/71y-U5WxWEL._AC_UF1000,1000_QL80_.jpg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22800%22 height%3D%22480%22 viewBox%3D%220 0 800 480%22%3E%3Crect width%3D%22800%22 height%3D%22480%22 fill%3D%22%231a1a1a%22%2F%3E%3Ctext x%3D%22400%22 y%3D%22240%22 font-family%3D%22Arial%22 font-size%3D%2220%22 fill%3D%22%23ffde37%22 text-anchor%3D%22middle%22%3EVintage Collection Image%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22480%22%3E%3Crect width=%22800%22 height=%22480%22 fill=%22%23333%22/%3E%3Ctext x=%22400%22 y=%22240%22 fill=%22%23FFDE37%22 text-anchor=%22middle%22 font-size=%2220%22%3EVintage Collection%3C/text%3E%3C/svg%3E'">
             
             <img id="modern-screen" src="https://assets.fathead.com/2023/products/GPK23S2_hero.jpg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22800%22 height%3D%22480%22 viewBox%3D%220 0 800 480%22%3E%3Crect width%3D%22800%22 height%3D%22480%22 fill%3D%22%231a1a1a%22%2F%3E%3Ctext x%3D%22400%22 y%3D%22240%22 font-family%3D%22Arial%22 font-size%3D%2220%22 fill%3D%22%23ffde37%22 text-anchor%3D%22middle%22%3EModern Series Image%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22480%22%3E%3Crect width=%22800%22 height=%22480%22 fill=%22%23333%22/%3E%3Ctext x=%22400%22 y=%22240%22 fill=%22%23FFDE37%22 text-anchor=%22middle%22 font-size=%2220%22%3EModern Series%3C/text%3E%3C/svg%3E'">
             
             <img id="wacky-screen" src="https://assets.fathead.com/2023/products/WP23S1_hero.jpg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22800%22 height%3D%22480%22 viewBox%3D%220 0 800 480%22%3E%3Crect width%3D%22800%22 height%3D%22480%22 fill%3D%22%231a1a1a%22%2F%3E%3Ctext x%3D%22400%22 y%3D%22240%22 font-family%3D%22Arial%22 font-size%3D%2220%22 fill%3D%22%23ffde37%22 text-anchor%3D%22middle%22%3EWacky Packages Image%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22480%22%3E%3Crect width=%22800%22 height=%22480%22 fill=%22%23333%22/%3E%3Ctext x=%22400%22 y=%22240%22 fill=%22%23FFDE37%22 text-anchor=%22middle%22 font-size=%2220%22%3EWacky Packages%3C/text%3E%3C/svg%3E'">
             
             <img id="custom-screen" src="https://i.etsystatic.com/12367418/r/il/1c5c2e/5168888605/il_1140xN.5168888605_9v3x.jpg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22800%22 height%3D%22480%22 viewBox%3D%220 0 800 480%22%3E%3Crect width%3D%22800%22 height%3D%22480%22 fill%3D%22%231a1a1a%22%2F%3E%3Ctext x%3D%22400%22 y%3D%22240%22 font-family%3D%22Arial%22 font-size%3D%2220%22 fill%3D%22%23ffde37%22 text-anchor%3D%22middle%22%3ECustom Cards Image%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22480%22%3E%3Crect width=%22800%22 height=%22480%22 fill=%22%23333%22/%3E%3Ctext x=%22400%22 y=%22240%22 fill=%22%23FFDE37%22 text-anchor=%22middle%22 font-size=%2220%22%3ECustom Cards%3C/text%3E%3C/svg%3E'">
             
             <img id="trading-screen" src="https://www.cardboardconnection.com/wp-content/uploads/2023/03/garbage-pail-kids-trading-cards.jpg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22800%22 height%3D%22480%22 viewBox%3D%220 0 800 480%22%3E%3Crect width%3D%22800%22 height%3D%22480%22 fill%3D%22%231a1a1a%22%2F%3E%3Ctext x%3D%22400%22 y%3D%22240%22 font-family%3D%22Arial%22 font-size%3D%2220%22 fill%3D%22%23ffde37%22 text-anchor%3D%22middle%22%3ETrading Hub Image%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22480%22%3E%3Crect width=%22800%22 height=%22480%22 fill=%22%23333%22/%3E%3Ctext x=%22400%22 y=%22240%22 fill=%22%23FFDE37%22 text-anchor=%22middle%22 font-size=%2220%22%3ETrading Hub%3C/text%3E%3C/svg%3E'">
             
             <img id="pack-screen" src="https://www.cardboardconnection.com/wp-content/uploads/2023/03/garbage-pail-kids-2023-series-2-cards.jpg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22800%22 height%3D%22480%22 viewBox%3D%220 0 800 480%22%3E%3Crect width%3D%22800%22 height%3D%22480%22 fill%3D%22%231a1a1a%22%2F%3E%3Ctext x%3D%22400%22 y%3D%22240%22 font-family%3D%22Arial%22 font-size%3D%2220%22 fill%3D%22%23ffde37%22 text-anchor%3D%22middle%22%3EPack Opening Image%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22800%22 height=%22480%22%3E%3Crect width=%22800%22 height=%22480%22 fill=%22%23333%22/%3E%3Ctext x=%22400%22 y=%22240%22 fill=%22%23FFDE37%22 text-anchor=%22middle%22 font-size=%2220%22%3EVirtual Packs%3C/text%3E%3C/svg%3E'">
             
-            <!-- Decoration Images -->
+            <!-- Logo -->
             <img id="gpk-logo" src="https://upload.wikimedia.org/wikipedia/en/4/4f/Garbage_Pail_Kids_Logo.svg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22800%22 height%3D%22480%22 viewBox%3D%220 0 800 480%22%3E%3Crect width%3D%22800%22 height%3D%22480%22 fill%3D%22%231a1a1a%22%2F%3E%3Ctext x%3D%22400%22 y%3D%22240%22 font-family%3D%22Arial%22 font-size%3D%2220%22 fill%3D%22%23ffde37%22 text-anchor%3D%22middle%22%3EGPK Logo%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                 onerror="this.onerror=null; this.style.display='none'">
             
+            <!-- Sample Cards with Fallbacks -->
             <img id="sample-card1" src="https://www.cardboardconnection.com/wp-content/uploads/2023/03/garbage-pail-kids-2023-series-2-cards.jpg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22240%22 height%3D%22336%22 viewBox%3D%220 0 240 336%22%3E%3Crect width%3D%22240%22 height%3D%22336%22 fill%3D%22%23ff3e41%22%2F%3E%3Ctext x%3D%22120%22 y%3D%22168%22 font-family%3D%22Arial%22 font-size%3D%2216%22 fill%3D%22%23ffffff%22 text-anchor%3D%22middle%22%3ESample Card 1%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22336%22%3E%3Crect width=%22240%22 height=%22336%22 fill=%22%23ff3e41%22/%3E%3Ctext x=%22120%22 y=%22168%22 fill=%22%23fff%22 text-anchor=%22middle%22%3ECard 1%3C/text%3E%3C/svg%3E'">
             
             <img id="sample-card2" src="https://m.media-amazon.com/images/I/71y-U5WxWEL._AC_UF1000,1000_QL80_.jpg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22240%22 height%3D%22336%22 viewBox%3D%220 0 240 336%22%3E%3Crect width%3D%22240%22 height%3D%22336%22 fill%3D%22%23ffde37%22%2F%3E%3Ctext x%3D%22120%22 y%3D%22168%22 font-family%3D%22Arial%22 font-size%3D%2216%22 fill%3D%22%23000000%22 text-anchor%3D%22middle%22%3ESample Card 2%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22336%22%3E%3Crect width=%22240%22 height=%22336%22 fill=%22%23ffde37%22/%3E%3Ctext x=%22120%22 y=%22168%22 fill=%22%23000%22 text-anchor=%22middle%22%3ECard 2%3C/text%3E%3C/svg%3E'">
             
             <img id="sample-card3" src="https://assets.fathead.com/2023/products/GPK23S2_hero.jpg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22240%22 height%3D%22336%22 viewBox%3D%220 0 240 336%22%3E%3Crect width%3D%22240%22 height%3D%22336%22 fill%3D%22%232e86ab%22%2F%3E%3Ctext x%3D%22120%22 y%3D%22168%22 font-family%3D%22Arial%22 font-size%3D%2216%22 fill%3D%22%23ffffff%22 text-anchor%3D%22middle%22%3ESample Card 3%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22336%22%3E%3Crect width=%22240%22 height=%22336%22 fill=%22%232e86ab%22/%3E%3Ctext x=%22120%22 y=%22168%22 fill=%22%23fff%22 text-anchor=%22middle%22%3ECard 3%3C/text%3E%3C/svg%3E'">
             
             <img id="sample-card4" src="https://assets.fathead.com/2023/products/WP23S1_hero.jpg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22240%22 height%3D%22336%22 viewBox%3D%220 0 240 336%22%3E%3Crect width%3D%22240%22 height%3D%22336%22 fill%3D%22%23ff3e41%22%2F%3E%3Ctext x%3D%22120%22 y%3D%22168%22 font-family%3D%22Arial%22 font-size%3D%2216%22 fill%3D%22%23ffffff%22 text-anchor%3D%22middle%22%3ESample Card 4%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22336%22%3E%3Crect width=%22240%22 height=%22336%22 fill=%22%23ff3e41%22/%3E%3Ctext x=%22120%22 y=%22168%22 fill=%22%23fff%22 text-anchor=%22middle%22%3ECard 4%3C/text%3E%3C/svg%3E'">
             
             <img id="sample-card5" src="https://i.etsystatic.com/12367418/r/il/1c5c2e/5168888605/il_1140xN.5168888605_9v3x.jpg"
-                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22 width%3D%22240%22 height%3D%22336%22 viewBox%3D%220 0 240 336%22%3E%3Crect width%3D%22240%22 height%3D%22336%22 fill%3D%22%23ffde37%22%2F%3E%3Ctext x%3D%22120%22 y%3D%22168%22 font-family%3D%22Arial%22 font-size%3D%2216%22 fill%3D%22%23000000%22 text-anchor%3D%22middle%22%3ESample Card 5%3C%2Ftext%3E%3C%2Fsvg%3E'">
+                 onerror="this.onerror=null; this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22240%22 height=%22336%22%3E%3Crect width=%22240%22 height=%22336%22 fill=%22%23ffde37%22/%3E%3Ctext x=%22120%22 y=%22168%22 fill=%22%23000%22 text-anchor=%22middle%22%3ECard 5%3C/text%3E%3C/svg%3E'">
             
-            <!-- Audio -->
+            <!-- Audio Files -->
             <audio id="ambient-sound" preload="auto" src="https://cdn.aframe.io/basic-guide/audio/backgroundnoise.wav"></audio>
             <audio id="click-sound" preload="auto" src="https://cdn.aframe.io/basic-guide/audio/click.ogg"></audio>
             <audio id="hover-sound" preload="auto" src="https://cdn.aframe.io/basic-guide/audio/hover.ogg"></audio>
@@ -570,309 +667,327 @@
     </a-scene>
 
     <script>
-        // Enhanced Loading System with Progress Tracking
-        document.addEventListener('DOMContentLoaded', function() {
+        // Main Application Controller
+        (function() {
+            'use strict';
+            
+            // DOM Elements
             const loadingScreen = document.getElementById('loading-screen');
             const progressBar = document.getElementById('progress-bar');
             const loadingText = document.getElementById('loading-text');
-            const scene = document.querySelector('a-scene');
-            
-            // Simulate loading progress (in a real app, track actual asset loading)
-            let progress = 0;
-            const loadingInterval = setInterval(() => {
-                progress += Math.random() * 10;
-                if (progress > 100) progress = 100;
-                progressBar.style.width = `${progress}%`;
-                
-                // Update loading text based on progress
-                if (progress < 30) {
-                    loadingText.textContent = "LOADING 3D ASSETS...";
-                } else if (progress < 70) {
-                    loadingText.textContent = "PREPARING ENVIRONMENT...";
-                } else {
-                    loadingText.textContent = "FINALIZING EXPERIENCE...";
-                }
-                
-                if (progress >= 100) {
-                    clearInterval(loadingInterval);
-                }
-            }, 200);
-            
-            // Hide loading screen when scene is ready
-            scene.addEventListener('loaded', function() {
-                clearInterval(loadingInterval);
-                progressBar.style.width = '100%';
-                loadingText.textContent = "WELCOME TO GPK ULTRA 3D!";
-                
-                setTimeout(() => {
-                    loadingScreen.style.opacity = '0';
-                    setTimeout(() => {
-                        loadingScreen.style.display = 'none';
-                        
-                        // Start ambient animations
-                        startRoomAnimations();
-                        
-                        // Set up screen interactions
-                        setupScreenInteractions();
-                        
-                        // Initialize navigation controls
-                        setupNavigationControls();
-                    }, 1000);
-                }, 500);
-            });
-        });
-        
-        // Enhanced Room Animations
-        function startRoomAnimations() {
-            // Add subtle animations to room elements
-            const floatingCards = document.querySelectorAll('#floating-cards a-image');
-            floatingCards.forEach((card, index) => {
-                const delay = index * 500;
-                card.setAttribute('animation__float', {
-                    property: 'position',
-                    to: `${card.getAttribute('position').x} ${parseFloat(card.getAttribute('position').y) + 0.5} ${card.getAttribute('position').z}`,
-                    dir: 'alternate',
-                    dur: 3000 + (index * 500),
-                    loop: true,
-                    easing: 'easeInOutSine',
-                    delay: delay
-                });
-                
-                card.setAttribute('animation__rotate', {
-                    property: 'rotation',
-                    to: `${card.getAttribute('rotation').x} ${parseFloat(card.getAttribute('rotation').y) + 10} ${card.getAttribute('rotation').z}`,
-                    dir: 'alternate',
-                    dur: 5000 + (index * 1000),
-                    loop: true,
-                    easing: 'easeInOutSine',
-                    delay: delay
-                });
-            });
-            
-            // Add ambient light animation
-            const ambientLight = document.querySelector('[light="type: ambient"]');
-            ambientLight.setAttribute('animation__pulse', {
-                property: 'light.intensity',
-                from: '0.4',
-                to: '0.5',
-                dur: 5000,
-                loop: true,
-                easing: 'easeInOutSine'
-            });
-        }
-        
-        // Enhanced Screen Interactions
-        function setupScreenInteractions() {
-            const screens = document.querySelectorAll('.screen');
             const screenInfo = document.getElementById('screen-info');
             const screenTitle = document.getElementById('screen-title');
             const screenDescription = document.getElementById('screen-description');
             const screenHotkeys = document.getElementById('screen-hotkeys');
+            const vrIndicator = document.getElementById('vr-indicator');
+            const scene = document.querySelector('a-scene');
             
-            // Screen data for each type with enhanced details
+            // Loading System with Real Asset Tracking
+            function initLoadingSystem() {
+                let progress = 0;
+                const totalAssets = 15; // Approximate number of assets to load
+                let loadedAssets = 0;
+                
+                // Track actual asset loading
+                const assetElements = document.querySelectorAll('a-assets img, a-assets audio');
+                assetElements.forEach(asset => {
+                    asset.addEventListener('load', () => {
+                        loadedAssets++;
+                        updateProgress();
+                    });
+                    
+                    asset.addEventListener('error', () => {
+                        loadedAssets++; // Count errors as loaded (using fallback)
+                        updateProgress();
+                    });
+                });
+                
+                // Fallback progress simulation
+                const fallbackInterval = setInterval(() => {
+                    if (loadedAssets < totalAssets) {
+                        progress = Math.min(90, (loadedAssets / totalAssets) * 100);
+                        updateProgressBar();
+                    }
+                }, 200);
+                
+                function updateProgress() {
+                    progress = Math.min(100, (loadedAssets / totalAssets) * 100);
+                    updateProgressBar();
+                    
+                    if (loadedAssets >= totalAssets) {
+                        clearInterval(fallbackInterval);
+                    }
+                }
+                
+                function updateProgressBar() {
+                    progressBar.style.width = `${progress}%`;
+                    
+                    if (progress < 40) {
+                        loadingText.textContent = "LOADING 3D ASSETS...";
+                    } else if (progress < 75) {
+                        loadingText.textContent = "PREPARING ENVIRONMENT...";
+                    } else if (progress < 100) {
+                        loadingText.textContent = "FINALIZING EXPERIENCE...";
+                    } else {
+                        loadingText.textContent = "WELCOME TO GPK ULTRA 3D!";
+                    }
+                }
+                
+                // Minimum loading time for UX
+                setTimeout(() => {
+                    if (progress >= 100) {
+                        hideLoadingScreen();
+                    } else {
+                        // Force complete after 5 seconds max
+                        progress = 100;
+                        updateProgressBar();
+                        setTimeout(hideLoadingScreen, 500);
+                    }
+                }, 3000);
+            }
+            
+            function hideLoadingScreen() {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => {
+                    loadingScreen.style.display = 'none';
+                    initExperience();
+                }, 800);
+            }
+            
+            // Initialize Experience After Loading
+            function initExperience() {
+                setupScreenInteractions();
+                setupNavigationControls();
+                setupVRDetection();
+                setupMobileDetection();
+            }
+            
+            // Screen Data Configuration
             const screenData = {
                 vintage: {
                     title: "VINTAGE COLLECTION",
-                    description: "Explore original 1985 GPK cards in 3D with interactive features",
+                    description: "Explore original 1985 GPK cards in immersive 3D with interactive zoom and rotation",
                     link: "vintage.html",
-                    hotkeys: ["CLICK: Enter", "E: Zoom", "R: Rotate"]
+                    hotkeys: ["Click: Enter", "E: Zoom", "R: Rotate"]
                 },
                 modern: {
                     title: "MODERN SERIES",
                     description: "View and interact with the latest GPK card releases in high detail",
                     link: "modern.html",
-                    hotkeys: ["CLICK: Enter", "E: Zoom", "R: Rotate"]
+                    hotkeys: ["Click: Enter", "E: Zoom", "R: Rotate"]
                 },
                 wacky: {
                     title: "WACKY PACKAGES",
                     description: "Interactive parody sticker collection with animation effects",
                     link: "wacky.html",
-                    hotkeys: ["CLICK: Enter", "E: Zoom", "R: Rotate"]
+                    hotkeys: ["Click: Enter", "E: Zoom", "R: Rotate"]
                 },
                 custom: {
                     title: "CUSTOM CARDS",
-                    description: "Browse and rate fan-created GPK artwork in 3D gallery",
+                    description: "Browse and rate fan-created GPK artwork in 3D gallery mode",
                     link: "custom.html",
-                    hotkeys: ["CLICK: Enter", "E: Zoom", "R: Rotate"]
+                    hotkeys: ["Click: Enter", "E: Zoom", "R: Rotate"]
                 },
                 trading: {
                     title: "TRADING HUB",
-                    description: "Connect with other collectors in real-time virtual trading",
+                    description: "Connect with other collectors in real-time virtual trading environment",
                     link: "trading.html",
-                    hotkeys: ["CLICK: Enter", "E: Zoom", "R: Rotate"]
+                    hotkeys: ["Click: Enter", "E: Zoom", "R: Rotate"]
                 },
                 "pack-opening": {
                     title: "VIRTUAL PACKS",
                     description: "Open digital GPK packs with realistic physics and animations",
                     link: "packs.html",
-                    hotkeys: ["CLICK: Enter", "E: Zoom", "R: Rotate"]
+                    hotkeys: ["Click: Enter", "E: Zoom", "R: Rotate"]
                 }
             };
             
-            // Add event listeners to each screen
-            screens.forEach(screen => {
-                const screenType = screen.getAttribute('screen-type');
-                const screenPlane = screen.querySelector('a-plane');
+            // Screen Interactions
+            function setupScreenInteractions() {
+                const screens = document.querySelectorAll('.screen');
                 
-                // Mouse enter - show info and highlight
-                screen.addEventListener('mouseenter', () => {
-                    const data = screenData[screenType];
-                    screenTitle.textContent = data.title;
-                    screenDescription.textContent = data.description;
+                screens.forEach(screen => {
+                    const screenType = screen.getAttribute('screen-type');
+                    const screenPlane = screen.querySelector('a-plane');
                     
-                    // Show hotkeys
-                    screenHotkeys.innerHTML = data.hotkeys.map(key => 
-                        `<span class="hotkey">${key}</span>`
-                    ).join('');
-                    
-                    screenInfo.style.display = 'block';
-                    
-                    // Add highlight effect
-                    screenPlane.setAttribute('material', 'emissive', '#FFDE37');
-                    screenPlane.setAttribute('material', 'emissiveIntensity', '0.3');
-                    
-                    // Play hover sound
-                    const hoverSound = document.querySelector('#hover-sound').cloneNode();
-                    hoverSound.volume = 0.3;
-                    hoverSound.play();
-                });
-                
-                // Mouse leave - hide info and remove highlight
-                screen.addEventListener('mouseleave', () => {
-                    screenInfo.style.display = 'none';
-                    
-                    // Remove highlight effect
-                    screenPlane.setAttribute('material', 'emissive', '#000000');
-                    screenPlane.setAttribute('material', 'emissiveIntensity', '0');
-                });
-                
-                // Click - navigate to experience
-                screen.addEventListener('click', () => {
-                    const data = screenData[screenType];
-                    
-                    // Visual feedback
-                    screenPlane.setAttribute('animation__click', {
-                        property: 'material.color',
-                        from: '#FFFFFF',
-                        to: '#FFDE37',
-                        dur: 200,
-                        easing: 'easeInOutQuad'
+                    // Mouse Enter
+                    screen.addEventListener('mouseenter', () => {
+                        const data = screenData[screenType];
+                        if (!data) return;
+                        
+                        screenTitle.textContent = data.title;
+                        screenDescription.textContent = data.description;
+                        
+                        // Render hotkeys
+                        screenHotkeys.innerHTML = data.hotkeys.map(key => 
+                            `<span>${key}</span>`
+                        ).join('');
+                        
+                        screenInfo.classList.add('active');
+                        
+                        // Play hover sound
+                        playSound('hover-sound', 0.2);
                     });
                     
-                    // Play click sound
-                    const clickSound = document.querySelector('#click-sound').cloneNode();
-                    clickSound.volume = 0.5;
-                    clickSound.play();
+                    // Mouse Leave
+                    screen.addEventListener('mouseleave', () => {
+                        screenInfo.classList.remove('active');
+                    });
                     
-                    setTimeout(() => {
-                        screenPlane.setAttribute('animation__click', {
-                            property: 'material.color',
-                            from: '#FFDE37',
-                            to: '#FFFFFF',
-                            dur: 200,
-                            easing: 'easeInOutQuad'
-                        });
+                    // Click
+                    screen.addEventListener('click', () => {
+                        const data = screenData[screenType];
+                        if (!data) return;
                         
-                        // In a real app, this would load a new scene
-                        console.log(`Navigating to: ${data.link}`);
+                        // Visual feedback
+                        screenPlane.setAttribute('material', 'emissive', '#FFDE37');
+                        screenPlane.setAttribute('material', 'emissiveIntensity', '0.5');
                         
-                        // For demo purposes, show a message
-                        screenInfo.style.display = 'block';
+                        // Play click sound
+                        playSound('click-sound', 0.4);
+                        
+                        // Show navigation message
                         screenDescription.textContent = `Loading ${data.title} experience...`;
                         
                         setTimeout(() => {
-                            screenInfo.style.display = 'none';
-                        }, 2000);
-                        
-                    }, 200);
-                });
-            });
-            
-            // Add keyboard navigation
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    screenInfo.style.display = 'none';
-                }
-            });
-        }
-        
-        // Enhanced Navigation Controls
-        function setupNavigationControls() {
-            const resetBtn = document.getElementById('reset-view');
-            const vrBtn = document.getElementById('vr-btn');
-            const helpBtn = document.getElementById('help-btn');
-            const vrIndicator = document.getElementById('vr-indicator');
-            const cameraRig = document.getElementById('camera-rig');
-            
-            // Reset View Button
-            resetBtn.addEventListener('click', () => {
-                cameraRig.setAttribute('position', '0 1.6 0');
-                cameraRig.setAttribute('rotation', '0 0 0');
-                
-                // Play click sound
-                const clickSound = document.querySelector('#click-sound').cloneNode();
-                clickSound.volume = 0.5;
-                clickSound.play();
-            });
-            
-            // VR Button
-            vrBtn.addEventListener('click', () => {
-                if (AFRAME.utils.device.checkHeadsetConnected()) {
-                    if (document.querySelector('a-scene').is('vr-mode')) {
-                        document.querySelector('a-scene').exitVR();
-                        vrIndicator.style.display = 'none';
-                    } else {
-                        document.querySelector('a-scene').enterVR();
-                        vrIndicator.style.display = 'block';
-                    }
-                } else {
-                    alert('VR headset not detected. Connect a headset for full immersion.');
-                }
-            });
-            
-            // Help Button
-            helpBtn.addEventListener('click', () => {
-                const screenInfo = document.getElementById('screen-info');
-                screenTitle.textContent = "GPK ULTRA 3D CONTROLS";
-                screenDescription.textContent = "Use mouse to look around, WASD to move, and click on screens to enter experiences";
-                screenInfo.style.display = 'block';
-                
-                setTimeout(() => {
-                    screenInfo.style.display = 'none';
-                }, 5000);
-            });
-            
-            // VR Mode Change Detection
-            document.querySelector('a-scene').addEventListener('enter-vr', () => {
-                vrIndicator.style.display = 'block';
-            });
-            
-            document.querySelector('a-scene').addEventListener('exit-vr', () => {
-                vrIndicator.style.display = 'none';
-            });
-        }
-        
-        // Register custom components
-        AFRAME.registerComponent('clickable', {
-            init: function() {
-                this.el.addEventListener('click', () => {
-                    // Play click sound
-                    const clickSound = document.querySelector('#click-sound').cloneNode();
-                    clickSound.volume = 0.5;
-                    clickSound.play();
-                    
-                    // Show card info
-                    const screenInfo = document.getElementById('screen-info');
-                    screenTitle.textContent = "RARE CARD DETAILS";
-                    screenDescription.textContent = "Click to view this card in the collection";
-                    screenInfo.style.display = 'block';
-                    
-                    setTimeout(() => {
-                        screenInfo.style.display = 'none';
-                    }, 3000);
+                            screenPlane.setAttribute('material', 'emissive', '#000000');
+                            screenPlane.setAttribute('material', 'emissiveIntensity', '0');
+                            
+                            // Navigate (in production)
+                            console.log(`Navigating to: ${data.link}`);
+                            // window.location.href = data.link;
+                            
+                            setTimeout(() => {
+                                screenInfo.classList.remove('active');
+                            }, 1500);
+                        }, 300);
+                    });
                 });
             }
-        });
+            
+            // Navigation Controls
+            function setupNavigationControls() {
+                const resetBtn = document.getElementById('reset-view');
+                const vrBtn = document.getElementById('vr-btn');
+                const helpBtn = document.getElementById('help-btn');
+                const fullscreenBtn = document.getElementById('fullscreen-btn');
+                const cameraRig = document.getElementById('camera-rig');
+                
+                // Reset View
+                resetBtn.addEventListener('click', () => {
+                    cameraRig.setAttribute('position', '0 1.6 2');
+                    cameraRig.setAttribute('rotation', '0 0 0');
+                    playSound('click-sound', 0.3);
+                });
+                
+                // VR Mode Toggle
+                vrBtn.addEventListener('click', () => {
+                    if (AFRAME.utils.device.checkHeadsetConnected()) {
+                        if (scene.is('vr-mode')) {
+                            scene.exitVR();
+                        } else {
+                            scene.enterVR();
+                        }
+                    } else {
+                        showInfo('VR HEADSET REQUIRED', 'Connect a VR headset for full immersion experience.');
+                    }
+                });
+                
+                // Help
+                helpBtn.addEventListener('click', () => {
+                    screenTitle.textContent = "GPK ULTRA 3D CONTROLS";
+                    screenDescription.textContent = "Mouse: Look | WASD: Move | Click Screens: Enter | ESC: Exit";
+                    screenHotkeys.innerHTML = '<span>Mouse</span><span>WASD</span><span>Click</span><span>ESC</span>';
+                    screenInfo.classList.add('active');
+                    
+                    setTimeout(() => {
+                        screenInfo.classList.remove('active');
+                    }, 4000);
+                });
+                
+                // Fullscreen
+                fullscreenBtn.addEventListener('click', () => {
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    } else {
+                        document.documentElement.requestFullscreen();
+                    }
+                });
+            }
+            
+            // VR Detection
+            function setupVRDetection() {
+                scene.addEventListener('enter-vr', () => {
+                    vrIndicator.classList.add('active');
+                });
+                
+                scene.addEventListener('exit-vr', () => {
+                    vrIndicator.classList.remove('active');
+                });
+            }
+            
+            // Mobile Detection
+            function setupMobileDetection() {
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                    const mobileWarning = document.getElementById('mobile-warning');
+                    mobileWarning.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        mobileWarning.style.display = 'none';
+                    }, 3000);
+                }
+            }
+            
+            // Utility: Play Sound
+            function playSound(soundId, volume = 0.5) {
+                const soundEl = document.getElementById(soundId);
+                if (soundEl) {
+                    const clone = soundEl.cloneNode();
+                    clone.volume = volume;
+                    clone.play().catch(() => {
+                        // Autoplay blocked, ignore
+                    });
+                }
+            }
+            
+            // Utility: Show Info Panel
+            function showInfo(title, description) {
+                screenTitle.textContent = title;
+                screenDescription.textContent = description;
+                screenInfo.classList.add('active');
+                
+                setTimeout(() => {
+                    screenInfo.classList.remove('active');
+                }, 3000);
+            }
+            
+            // Register Custom Component: Clickable
+            AFRAME.registerComponent('clickable', {
+                init: function() {
+                    this.el.addEventListener('click', () => {
+                        playSound('click-sound', 0.3);
+                        
+                        const cardName = this.el.getAttribute('src') || 'Card';
+                        showInfo('CARD DETAILS', 'Click to view this card in the collection');
+                    });
+                }
+            });
+            
+            // Initialize loading when DOM is ready
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initLoadingSystem);
+            } else {
+                initLoadingSystem();
+            }
+            
+            // Scene ready event
+            scene.addEventListener('loaded', () => {
+                console.log('GPK Ultra 3D scene loaded successfully');
+            });
+            
+        })();
     </script>
 </body>
 </html>
